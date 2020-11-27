@@ -1,0 +1,72 @@
+wget https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+md5sum mysql80-community-release-el7-3.noarch.rpm | grep 893b55d5d885df5c4d4cf7c4f2f6c153
+sudo rpm -ivh mysql80-community-release-el7-3.noarch.rpm
+sudo yum install mysql-server
+#sudo yum install mysql  # if you need just the client
+
+sudo systemctl start mysqld
+sudo systemctl status mysqld
+
+sudo grep 'temporary password' /var/log/mysqld.log
+sudo mysql_secure_installation
+
+mysqladmin -u root -p version
+Chase901#  
+---
+mysql -u root -p
+    CREATE USER 'newuser'@'%' IDENTIFIED BY 'Chase901#';
+    GRANT ALL PRIVILEGES ON dbone.* TO 'newuser'@'%' ;
+    SHOW GRANTS FOR 'newuser'@'%';
+    SHOW GRANTS FOR 'root'@'%';
+    SHOW GRANTS FOR 'root'@'localhost';
+    CREATE DATABASE dbone;
+mysql -u newuser -p -h 192.168.77.10 --port=3306
+mysql -u newuser -p -h hdpmc1        --port=3306
+    show databases;
+    use  dbone;
+    create table  pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
+    INSERT INTO pet(name, owner , species , sex , birth, death ) VALUES ('Puffball','Diane','hamster','f','1999-03-30',NULL);
+    INSERT INTO pet(name, owner , species , sex , birth, death ) VALUES ('Musti','Pathik','dog','f','1999-03-30',NULL);    
+    select * from pet;
+Backup 
+    mysqldump -u root --flush-privileges --all-databases -r mysql.dump -p
+    mysql -u root -p < mysql.dump 
+-----------------------------------------------------------------
+-- Validate by connecting from another host ---------------------
+-----------------------------------------------------------------
+#you will only need to install mysql
+mysql -u newuser -p -h 192.168.77.10 --port=3306
+mysql -u newuser -p -h hdpmc1        --port=3306
+    show databases;
+    select * from dbone.pet;
+
+-----------------------------------------------------------------
+-- Connect using Python -----------------------------------------
+-----------------------------------------------------------------
+sudo yum install -y python3
+sudo pip3 install virtualenv
+python3 -m virtualenv venvproj
+. ~/venvproj/bin/activate
+pip3 install mysql-connector-python
+
+$ cat config.py
+MYSQL_HOST="192.168.77.10"
+MYSQL_USER="newuser"
+MYSQL_PASSWORD="Chase901#"
+MYSQL_DATABASE="dbone"
+
+$ cat   getMySql.py
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor = mydb.cursor()
+mycursor.execute("SELECT * FROM pet")
+myresult = mycursor.fetchall()
+for x in myresult:
+  print(x)
+tablename = 'weather_table'
+create_table = """ create table if not exists %s (
+city TEXT, country TEXT, latitude REAL, longitude REAL, todays_date DATE, humidity REAL, pressure REAL, min_temp REAL, max_temp REAL, temp     REAL, weather  TEXT)""" % tablename
+mycursor.execute(create_table)
+mydb.commit()
+$

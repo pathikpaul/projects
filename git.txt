@@ -1,0 +1,38 @@
+sudo yum -y install git
+git --version
+
+git config --global user.name "Pathik Paul"
+git config --global user.email "you@example.com"
+git config credential.helper cache
+cd ~
+git clone https://github.com/pathikpaul/projects
+git clone git@github.com:pathikpaul/notes.git
+cd ~/projects
+git status 
+# git add README.md
+# git commit -m "added new files"
+git push
+
+-----------------------------------------------------------------------------
+-- How to contribute --------------------------------------------------------
+-----------------------------------------------------------------------------
+https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/
+
+
+
+-----------------------------------------------------------------------------
+-- Making changes -----------------------------------------------------------
+-----------------------------------------------------------------------------
+	https://help.github.com/articles/connecting-to-github-with-ssh/
+		ssh-keygen -t rsa -b 4096 -C "pathikpaul@hotmail.com"
+		# start the ssh-agent in the background
+		eval $(ssh-agent -s)
+		ssh-add ~/.ssh/id_rsa
+		clip < ~/.ssh/id_rsa.pub
+
+		Now add the key to GitHub
+
+-----------------------------------------------------------------------------
+	git clone git@github.com:pathikpaul/spark-build.git
+	git checkout spark-hive-patch
+	git diff spark-hive-patch master

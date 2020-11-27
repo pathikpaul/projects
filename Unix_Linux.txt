@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------
 -- Logging into Machine bento/centos-7.2 ----------------------------
 ---------------------------------------------------------------------
-vagrant
+vagrant/vagrant
+su -  # vagrant
 
 ---------------------------------------------------------------------
 -- Creating User for use on Machine ---------------------------------
@@ -18,6 +19,7 @@ echo "hadoop  ALL=(ALL)       ALL" >> /etc/sudoers
 ---------------------------------------------------------------------
 -- Setup host file  -------------------------------------------------
 ---------------------------------------------------------------------
+vi /etc/hosts
 === Before on hdpmc1
 127.0.0.1       hdpmc1  hdpmc1
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
@@ -37,7 +39,160 @@ ping -c1 hdpmc2
 ping -c1 `hostname -f`
 ping -c1 `hostname`
 ---------------------------------------------------------------------
+-- Install git client -----------------------------------------------
+---------------------------------------------------------------------
+sudo yum -y install git
+---------------------------------------------------------------------
 -- Check Intenet connectivity ---------------------------------------
 ---------------------------------------------------------------------
 ping -c1 google.com
+
+---------------------------------------------------------------------
+-- Fixing Time on Machine -------------------------------------------
+---------------------------------------------------------------------
+sudo ls 
+sudo yum install ntp
+sudo timedatectl set-ntp false
+sudo timedatectl set-ntp true
+
+---------------------------------------------------------------------
+-- ubuntu-18.04 -----------------------------------------------------
+---------------------------------------------------------------------
+sudo -i  ## to swich to root
+usermod --shell /bin/bash hadoop
+mkdir -p /home/hadoop
+chown hadoop:hadoop /home/hadoop
+grep PasswordAuthentication /etc/ssh/sshd_config
+vi /etc/ssh/sshd_config
+service ssh status
+service ssh restart
+---------------------------------------------------------------------
+-- Password less SSH ------------------------------------------------
+---------------------------------------------------------------------
+ssh-keygen -t rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+or 
+ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@slave1
+ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@slave2
+chmod 700 ~/.ssh/authorized_keys
+---------------------------------------------------------------------
+-- Password less SSH FID1 to FID2 -----------------------------------
+---------------------------------------------------------------------
+hadoop1@hdpmc1$ 
+	ssh-keygen -t rsa
+	cksum ~/.ssh/id_rsa.pub
+hadoop2@hdpmc2$
+	mkdir ~/.ssh
+	vi ~/.ssh/authorized_keys
+	cksum ~/.ssh/authorized_keys
+	# cksum should match 
+	chmod 700 ~/.ssh
+	chmod 400 ~/.ssh/authorized_keys
+# Test
+hadoop1@hdpmc1$ 
+	ssh hadoop2@hdpmc2
+	/home/hadoop1/.ssh/known_hosts  ## is updated 
+---------------------------------------------------------------------
+-- Open Ports -------------------------------------------------------
+---------------------------------------------------------------------
+firewall-cmd --zone=public --add-port=8080/tcp --permanent
+firewall-cmd --reload
+OR
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+
+. RHEL 6 ............................................................
+sudo service iptables stop
+sudo service iptables status
+sudo chkconfig iptables --list
+sudo chkconfig iptables off
+
+---------------------------------------------------------------------
+-- Change Hostname  -------------------------------------------------
+---------------------------------------------------------------------
+** Change hostname **
+ sudo hostnamectl set-hostname node2.centos73.pathik
+ sudo hostnamectl set-hostname node2.centos73.pathik --pretty
+ sudo hostnamectl set-hostname node2.centos73.pathik --static
+ sudo hostnamectl set-hostname node2.centos73.pathik --transient
+ sudo hostnamectl status
+   Static hostname: node2.centos73.pathik
+
+---------------------------------------------------------------------
+-- Yum install package ----------------------------------------------
+---------------------------------------------------------------------
+yum provides */netstat
+    net-tools-2.0-0.17.20131004git.el7.x86_64 : Basic networking tools
+OR
+yum whatprovides */netstat
+    nt-tools-2.0-0.17.20131004git.el7.x86_64 : Basic networking tools
+
+yum install net-tools -y
+
+---------------------------------------------------------------------
+-- Who is using a port ----------------------------------------------
+---------------------------------------------------------------------
+sudo netstat -nlp | grep mesos
+    [root@base ~]# sudo netstat -nlp | grep mesos
+    tcp        0      0 0.0.0.0:5050            0.0.0.0:*               LISTEN      2487/mesos-master
+    tcp        0      0 0.0.0.0:5051            0.0.0.0:*               LISTEN      2535/mesos-slave
+    [root@base ~]#
+    
+fuser -v 53/tcp
+    # tells me who is using port 53
+---------------------------------------------------------------------
+-- Python Simple HTTP Server ( Comes with Centos7.3) ----------------
+---------------------------------------------------------------------
+$ python -m SimpleHTTPServer 8001
+http://192.168.1.14:8001/    
+
+---------------------------------------------------------------------
+-- Use Python to Parse JSON ( Comes with Centos7.3) -----------------
+---------------------------------------------------------------------
+curl http://0.0.0.0:8080/metrics | python -m json.tool | less    
+
+
+---------------------------------------------------------------------
+-- Setting up local time --------------------------------------------
+---------------------------------------------------------------------
+sudo ntpdate 129.6.15.28
+sudo mv /etc/localtime /etc/localtime.bak
+sudo ln -s /usr/share/zoneinfo/America/New_York /etc/localtime
+
+---------------------------------------------------------------------
+-- Extend Disk Space ------------------------------------------------
+---------------------------------------------------------------------
+vgs 
+    # Find Unallocated space
+    
+lvextend -L10G /dev/....
+resize2fs /dev/...
+    # use the mount name from "df -hP"
+
+---------------------------------------------------------------------
+-- Create a Large File ----------------------------------------------
+---------------------------------------------------------------------
+    fallocate -l 10G filename.txt
+    
+---------------------------------------------------------------------
+-- Remove Non Ascii charcaters --------------------------------------
+---------------------------------------------------------------------
+    iconf -c -t ascii           /tmp/pathik/1.sql > /tmp/pathik/1.sql.out
+    iconf -c -t ascii//TRANSLIT /tmp/pathik/1.sql > /tmp/pathik/1.sql.out
+    
+---------------------------------------------------------------------
+-- Disk Full --------------------------------------------------------
+---------------------------------------------------------------------
+  du -k                    / 2>/dev/null | sort -rn
+  du -k --one-file-system  / 2>/dev/null | sort -rn
+
+---------------------------------------------------------------------
+-- Symbolic Links ---------------------------------------------------
+---------------------------------------------------------------------
+ln -s Target LINK_NAME
+ln -s 1 2
+ls -l 
+    1
+    2 -> 1
+---------------------------------------------------------------------
 
