@@ -1,0 +1,43 @@
+---------------------------------------------------------------------
+-- Logging into Machine bento/centos-7.2 ----------------------------
+---------------------------------------------------------------------
+vagrant
+
+---------------------------------------------------------------------
+-- Creating User for use on Machine ---------------------------------
+---------------------------------------------------------------------
+groupadd hadoop
+useradd hadoop -g hadoop
+passwd hadoop
+
+---------------------------------------------------------------------
+-- Setting up Sudo for User -----------------------------------------
+---------------------------------------------------------------------
+echo "hadoop  ALL=(ALL)       ALL" >> /etc/sudoers
+
+---------------------------------------------------------------------
+-- Setup host file  -------------------------------------------------
+---------------------------------------------------------------------
+=== Before on hdpmc1
+127.0.0.1       hdpmc1  hdpmc1
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+=== Before on hdpmc2
+127.0.0.1       hdpmc2  hdpmc2
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+=== After on both Machines
+192.168.77.10   hdpmc1  hdpmc1
+192.168.77.11   hdpmc2  hdpmc2
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+ping -c1 hdpmc1
+ping -c1 hdpmc2
+ping -c1 `hostname -f`
+ping -c1 `hostname`
+---------------------------------------------------------------------
+-- Check Intenet connectivity ---------------------------------------
+---------------------------------------------------------------------
+ping -c1 google.com
+
