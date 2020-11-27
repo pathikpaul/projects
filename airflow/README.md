@@ -40,11 +40,12 @@ airflow backfill tutorial -s 2015-06-01 -e 2015-06-02
 
 ## http://michael-harmon.com/blog/AirflowETL.html
 - copy the code 
--- ~/projects/weatherapi/getWeather.py
--- ~/airflow/dags/src/getWeather.py
+```bash
+cp  ~/projects/weatherapi/getWeather.py ~/airflow/dags/src/getWeather.py
+```
 - Create Connection
-- weather_id
-- mysql
-- Host: 192.168.77.10
-- Schema: dbone
-- Port: 3306
+ - weather_id
+ - mysql
+ - Host: 192.168.77.10
+ - Schema: dbone
+ - Port: 3306
