@@ -43,7 +43,7 @@ airflow backfill tutorial -s 2015-06-01 -e 2015-06-02
     from airflow.hooks import MySqlHook
     import MySQLdb
       this is possibly not compatible with python3
-      Try with python2 maybe
+      Try with postgres maybe
 ```
 
 ## http://michael-harmon.com/blog/AirflowETL.html
@@ -51,7 +51,13 @@ airflow backfill tutorial -s 2015-06-01 -e 2015-06-02
 ```bash
 cp  ~/projects/weatherapi/getWeather.py ~/airflow/dags/src/getWeather.py
 ```
-* Create Connection
+* Create Connection for postgres
+  * weather_id
+  * Postgres
+  * Host: 192.168.77.11
+  * Schema: testdb
+  * Port: 5432
+* OR Create Connection for MySQL
   * weather_id
   * mysql
   * Host: 192.168.77.10
