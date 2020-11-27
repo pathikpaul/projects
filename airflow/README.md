@@ -38,6 +38,14 @@ airflow test tutorial templated 2015-06-01
 airflow backfill tutorial -s 2015-06-01 -e 2015-06-02
 ```
 
+## issues with mysql
+```bash
+    from airflow.hooks import MySqlHook
+    import MySQLdb
+      this is possibly not compatible with python3
+      Try with python2 maybe
+```
+
 ## http://michael-harmon.com/blog/AirflowETL.html
 - copy the code 
 ```bash

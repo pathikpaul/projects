@@ -51,9 +51,8 @@ dag = DAG(
     'weatherDAG',
     default_args=default_args,
     description='Weather API DAG',
-    start_date = datetime(2020,11,27)
-    schedule_interval=timedelta(days=1),
-)
+    start_date = datetime(2020,11,27),
+    schedule_interval=timedelta(days=1))
 t1 = BashOperator(
     task_id='get_weather',
     bash_command='python3 ~/airflow/dags/src/getWeather.py',
