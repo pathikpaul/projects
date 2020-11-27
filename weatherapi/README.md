@@ -35,9 +35,10 @@ $ python3 loadWeather.py
 ```
 
 ## config.py
+```bash
 API_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 MYSQL_HOST="192.168.77.10"
 MYSQL_USER="newuser"
 MYSQL_PASSWORD="Chase901#"
 MYSQL_DATABASE="dbone"
-
+```
