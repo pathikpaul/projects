@@ -4,9 +4,10 @@ git --version
 git config --global user.name "Pathik Paul"
 git config --global user.email "you@example.com"
 git config credential.helper cache
+git config --global credential.helper store
 cd ~
 git clone https://github.com/pathikpaul/projects
-git clone git@github.com:pathikpaul/notes.git
+#git clone git@github.com:pathikpaul/notes.git
 cd ~/projects
 git status 
 # git add README.md
