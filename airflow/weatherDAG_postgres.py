@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from datetime import datetime, timedelta
+=======
+from datetime import datetime
+>>>>>>> 30a88bbcd0fc1c605f784ca1b1016f411b147cba
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators import PythonOperator
@@ -45,7 +49,11 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
+<<<<<<< HEAD
     'retry_delay': timedelta(minutes=5)
+=======
+    'retry_delay': timedelta(minutes=5),
+>>>>>>> 30a88bbcd0fc1c605f784ca1b1016f411b147cba
 }
 dag = DAG(
     'weatherDAG',
