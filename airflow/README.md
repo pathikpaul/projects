@@ -46,6 +46,7 @@ airflow backfill   pathik-tutorial -s 2020-11-27 -e 2020-11-28
 
 ## http://michael-harmon.com/blog/AirflowETL.html
 ### PreReauisties: Test and Validate that the WeatherAPI code is working with postgres
+https://github.com/pathikpaul/projects/tree/main/weatherapi
 ### copy the code 
 ```bash
 mkdir ~/airflow/dags
