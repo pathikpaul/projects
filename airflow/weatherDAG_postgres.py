@@ -55,7 +55,7 @@ dag = DAG(
     schedule_interval=timedelta(days=1))
 t1 = BashOperator(
     task_id='get_weather',
-    bash_command='python3 ~/airflow/dags/src/getWeather.py',
+    bash_command='python3 ~/airflow/dags/getWeather.py',
     dag=dag)
 t2 = PythonOperator(
     task_id='transform_load',

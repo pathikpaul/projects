@@ -20,6 +20,13 @@ $ python3 createWeatherTable.py
   This will create the "weather_table"
 ```
 
+## Test the API using a browser
+```bash
+http://api.openweathermap.org/data/2.5/weather?&q=Brooklyn,USA&appid=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+http://api.openweathermap.org/data/2.5/weather?&q=Edison,USA&appid=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+http://api.openweathermap.org/data/2.5/weather?q=Edison%2CUSA&appid=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
 ## Get Data from API to Local File
 ```bash
 $ mkdir -p ~/projects/weatherapi/data
