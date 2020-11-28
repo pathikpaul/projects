@@ -49,6 +49,7 @@ airflow backfill   pathik-tutorial -s 2020-11-27 -e 2020-11-28
 https://github.com/pathikpaul/projects/tree/main/weatherapi
 ### copy the code 
 ```bash
+python3 /projects/weatherapi/weatherDAG_postgres.py  ## Validate that the code compiles
 mkdir ~/airflow/dags
 mkdir ~/airflow/dags/data
 cp  ~/projects/weatherapi/weatherDAG_postgres.py ~/airflow/dags/.
