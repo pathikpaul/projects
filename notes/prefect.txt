@@ -76,6 +76,74 @@ print(state)
 -- run the avove code by using ----------------------------------------------
 -----------------------------------------------------------------------------
 python 1.py
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-- Prefect Task Example -----------------------------------------------------
+-- Run a Shell Script 
+-- Read Data from MySQL 
+-- Load data to another MySQL Table
+-- pip install "prefect[mysql]"       ## to install the exta
+-- pip install mysql-connector-python ## to install the connector
+-- Ref: https://docs.prefect.io/api/latest/tasks/shell.html
+-- Ref: https://docs.prefect.io/api/latest/tasks/mysql.html
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+$ cat 3.py
+from prefect import task, Flow, Parameter
+from datetime import timedelta
+from prefect.tasks.mysql.mysql import MySQLExecute,MySQLFetch
+from prefect.tasks.shell import ShellTask
+import mysql.connector
+import config as C
+
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor2 = mydb.cursor()
+
+myshelltask = ShellTask(helper_script="cd /tmp")
+
+sqlfetchtask  = MySQLFetch(db_name="dbone", user="newuser", password="xxxxxxxxx", host="192.168.77.11", port=3306, commit=False, charset="utf8mb4", cursor_type="cursor")
+
+@task(max_retries=1, retry_delay=timedelta(minutes=1))
+def show_shell_op(x):
+   print(x)
+
+@task(max_retries=1, retry_delay=timedelta(minutes=1))
+def process_fetch_res(x):
+   for y in x:
+        mycursor2.execute("INSERT INTO new_covid_data(dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",y)
+        #print(y)
+
+with Flow("My first flow!") as flow:
+    contents = myshelltask(command="pwd")
+    show_shell_op(contents)
+    fetch_res  = sqlfetchtask(query="select * from covid_data", fetch="all", fetch_count=10)
+    process_fetch_res(fetch_res)
+
+state = flow.run()
+mydb.commit()
+print(state)
+
+$ python 3.py
+[2020-12-04 22:58:02+0000] INFO - prefect.FlowRunner | Beginning Flow run for 'My first flow!'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'ShellTask': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'ShellTask': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'MySQLFetch': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'MySQLFetch': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'MySQLFetch': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'process_fetch_res': Starting task run...
+INFO:prefect.TaskRunner:Task 'process_fetch_res': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'process_fetch_res': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'process_fetch_res': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'show_shell_op': Starting task run...
+INFO:prefect.TaskRunner:Task 'show_shell_op': Starting task run...
+/tmp
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'show_shell_op': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'show_shell_op': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.FlowRunner | Flow run SUCCESS: all reference tasks succeeded
+INFO:prefect.FlowRunner:Flow run SUCCESS: all reference tasks succeeded
+<Success: "All reference tasks succeeded.">
+$
 -----------------------------------------------------------------------------
 -- Ref: https://github.com/ludwigm/prefect-demo-flow/blob/master/demo_flow/flow.py
 -----------------------------------------------------------------------------
@@ -126,3 +194,39 @@ pdf2.to_csv('/home/hadoop/work-prefect/covid-monthly-'+str(datetime.now().isofor
 pdf.to_pickle("/home/hadoop/work-prefect/dummy.pkl")
 pdf = pd.read_pickle("/home/hadoop/work-prefect/dummy.pkl")
 .............................................................................
+-----------------------------------------------------------------------------
+-- We want to load the data to MySQL from Pandas ----------------------------
+-----------------------------------------------------------------------------
+-- Run Below on MySQL to create the table needed to copy the data
+mysql -u newuser -p -h 192.168.77.11 --port=3306
+create table covid_data (
+ dateRep                 date 
+,day                     integer
+,month                   integer
+,year                    text
+,cases                   integer  
+,deaths                  integer  
+,countriesAndTerritories text 
+,geoId                   text 
+,countryterritoryCode    text 
+,popData2019             real
+,continentExp            text 
+,Cum_14d_per_10k         integer 
+,yr_mth                  text);
+-----------------------------------------------------------------------------
+-- Run the below on the Jupyter Notebook
+pdf=pdf.rename(columns={"Cumulative_number_for_14_days_of_COVID-19_cases_per_100000": "Cum_14d_per_10k"})
+pdf['dateRep']= pd.to_datetime(pdf['dateRep'])
+
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor2 = mydb.cursor()
+mydb.commit()
+
+for index, row in pdf.iterrows():
+    nrow=(row.dateRep ,row.day ,row.month ,row.year ,row.cases ,row.deaths ,row.countriesAndTerritories ,row.geoId ,row.countryterritoryCode ,row.popData2019 ,row.continentExp,row.Cum_14d_per_10k ,row.year_month)
+    mycursor2.execute("INSERT INTO covid_data(dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",nrow)
+
+mydb.commit()
+-----------------------------------------------------------------------------
