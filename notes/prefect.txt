@@ -1,0 +1,128 @@
+Ref: https://docs.prefect.io/core/getting_started/installation.html
+-----------------------------------------------------------------------------
+-- Prefect Installation -----------------------------------------------------
+-----------------------------------------------------------------------------
+conda update conda
+conda install -c conda-forge prefect
+
+I did not install the backend
+
+-----------------------------------------------------------------------------
+-- Prefect Sample Code  -----------------------------------------------------
+-----------------------------------------------------------------------------
+$ cat 1.py
+from prefect import task, Flow, Parameter
+from datetime import timedelta
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def say_hello_world():
+    print("Hello, world!")
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def add(x, y=1):
+    print("adding",x,y,"result=",x + y)
+    return x + y
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def say_hello(person: str):
+    print("Hello, {}!".format(person))
+
+#################################################
+# Tasks may be run individually
+#################################################
+#say_hello_world.run()
+#say_hello.run("Marvin")
+
+#################################################
+# Functional API
+#################################################
+#with Flow("My first flow!") as flow:
+#    person = Parameter("person")
+#    first_result  = add(x=1,            y=2)
+#    second_result = add(x=first_result, y=100)
+#    say_hello(person,upstream_tasks=[add(2,y=5)])
+#    say_hello_world(upstream_tasks=[say_hello(person)])
+#
+#state = flow.run(person="Marvin")
+#first_task_state = state.result[first_result]
+#second_task_state = state.result[second_result]
+#
+#print ( "first_task_state",   first_task_state)
+#print ( "first_task_result",  first_task_state.result)
+#print ( "second_task_state",  second_task_state)
+#print ( "second_task_result", second_task_state.result)
+#
+
+#################################################
+# Imperative API
+#################################################
+flow = Flow("My imperative flow!")
+name = Parameter("name")
+second_add = add.copy()
+flow.add_task(add)
+flow.add_task(second_add)
+flow.add_task(say_hello)
+flow.add_task(say_hello_world)
+add.set_upstream(say_hello_world, flow=flow)
+add.set_upstream(say_hello, flow=flow)
+say_hello.bind(person=name, flow=flow)
+#add.bind(x=1, y=2, flow=flow) ## This will trigger a failure
+add.bind(x="1", y=2, flow=flow)
+second_add.bind(x=add, y=100, flow=flow)
+
+state = flow.run(name="Marvin")
+print(state)
+-----------------------------------------------------------------------------
+-- run the avove code by using ----------------------------------------------
+-----------------------------------------------------------------------------
+python 1.py
+-----------------------------------------------------------------------------
+-- Ref: https://github.com/ludwigm/prefect-demo-flow/blob/master/demo_flow/flow.py
+-----------------------------------------------------------------------------
+.. Download the file for the example
+.............................................................................
+wget https://opendata.ecdc.europa.eu/covid19/casedistribution/json/
+mv index.html coviddata.json
+$ ls -lh coviddata.json
+-rwxrwxrwx. 1 vagrant vagrant 27M Dec  4 10:01 coviddata.json
+$
+.............................................................................
+.. Run Parts of the example in a Notebook
+.............................................................................
+import json
+import urllib.request
+import pandas as pd
+from datetime import datetime
+COVID_DATA_URL = "https://opendata.ecdc.europa.eu/covid19/casedistribution/json"
+.............................................................................
+#def download_data() -> pd.DataFrame:
+#    with urllib.request.urlopen(COVID_DATA_URL) as url:
+#        covid_data = json.loads(url.read().decode())["records"]
+#        covid_df = pd.DataFrame(covid_data)
+#        return covid_df
+def download_data() -> pd.DataFrame:
+    f = open('/vagrant/coviddata.json') 
+    covid_df = pd.DataFrame(json.load(f)['records'])
+    return covid_df    
+.............................................................................
+def filter_data(covid_df: pd.DataFrame, country: str) -> pd.DataFrame:
+    return covid_df[covid_df.countriesAndTerritories == country].copy()
+.............................................................................
+def aggregate_data(covid_df: pd.DataFrame) -> pd.DataFrame:
+    """Monthly sum of COVID cases"""
+    return (
+        covid_df.groupby("year_month")
+        .agg({"cases": "sum", "deaths": "sum"})
+        .sort_index()
+    )
+.............................................................................
+pdf = download_data()
+pdf = filter_data(pdf,"Germany")
+pdf2 = aggregate_data(pdf)
+pdf2.to_csv('/home/hadoop/work-prefect/covid-monthly-'+str(datetime.now().isoformat())+'.csv')
+.............................................................................
+.. Use Pickle to Save the pandas dataframe if needed
+.............................................................................
+pdf.to_pickle("/home/hadoop/work-prefect/dummy.pkl")
+pdf = pd.read_pickle("/home/hadoop/work-prefect/dummy.pkl")
+.............................................................................
