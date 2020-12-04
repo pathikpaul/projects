@@ -11,10 +11,10 @@ sudo grep 'temporary password' /var/log/mysqld.log
 sudo mysql_secure_installation
 
 mysqladmin -u root -p version
-Chase901#  
+Pathik901#  
 ---
 mysql -u root -p
-    CREATE USER 'newuser'@'%' IDENTIFIED BY 'Chase901#';
+    CREATE USER 'newuser'@'%' IDENTIFIED BY 'Pathik901#';
     GRANT ALL PRIVILEGES ON dbone.* TO 'newuser'@'%' ;
     SHOW GRANTS FOR 'newuser'@'%';
     SHOW GRANTS FOR 'root'@'%';
@@ -52,7 +52,7 @@ pip3 install mysql-connector-python
 $ cat config.py
 MYSQL_HOST="192.168.77.10"
 MYSQL_USER="newuser"
-MYSQL_PASSWORD="Chase901#"
+MYSQL_PASSWORD="Pathik901#"
 MYSQL_DATABASE="dbone"
 
 $ cat   getMySql.py
