@@ -1,0 +1,43 @@
+https://docs.docker.com/engine/install/centos/
+-----------------------------------------------------------------------------
+-- Docker Hello World on Centos on Vagrant ----------------------------------
+-----------------------------------------------------------------------------
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
+sudo systemctl status docker
+sudo docker run hello-world
+sudo groupadd docker
+sudo usermod -aG docker hadoop
+$ docker run hello-world  ## after logout and relogin
+    Hello from Docker!
+    This message shows that your installation appears to be working correctly.
+    :::::: More O/P produced .. Pathik Pathik ::
+$
+-----------------------------------------------------------------------------
+$ cat Vagrantfile
+Vagrant.configure("2") do |config|
+    config.vm.define "hdpmc1" do |hdpmc1| 
+        hdpmc1.vm.box = "bento/centos-7.2"
+        hdpmc1.vm.network "private_network", ip:"192.168.77.10"
+        hdpmc1.vm.hostname = "hdpmc1"
+        hdpmc1.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc1"
+           vb.memory = 4096
+           vb.cpus = 1
+        end
+    end    
+    config.vm.define "hdpmc2" do |hdpmc2| 
+        hdpmc2.vm.box = "bento/centos-7.2"
+        hdpmc2.vm.network "private_network", ip:"192.168.77.11"
+        hdpmc2.vm.hostname = "hdpmc2"
+        hdpmc2.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc2"
+           vb.memory = 4096
+           vb.cpus = 1
+        end
+    end    
+end
+$
+-----------------------------------------------------------------------------
