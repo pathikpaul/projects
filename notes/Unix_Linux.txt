@@ -146,4 +146,17 @@ ls -l
     1
     2 -> 1
 ---------------------------------------------------------------------
+-- Checking Connections to Interfaces -------------------------------
+---------------------------------------------------------------------
+https://zaiste.net/posts/postgresql-allow-remote-connections/
+$ netstat -nlt  ### Port 5432 is bound only to 'localhost'
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN
 
+$ netstat -nlt  ## Port 5432 is now bound to all interfaces
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 0.0.0.0:5432            0.0.0.0:*               LISTEN
+
+---------------------------------------------------------------------
+-- END --------------------------------------------------------------
+---------------------------------------------------------------------
