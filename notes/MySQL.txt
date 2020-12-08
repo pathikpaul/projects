@@ -1,0 +1,141 @@
+wget https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+md5sum mysql80-community-release-el7-3.noarch.rpm | grep 893b55d5d885df5c4d4cf7c4f2f6c153
+sudo rpm -ivh mysql80-community-release-el7-3.noarch.rpm
+sudo yum install mysql-server
+#sudo yum install mysql  # if you need just the client
+
+sudo systemctl start mysqld
+sudo systemctl status mysqld
+
+sudo grep 'temporary password' /var/log/mysqld.log
+sudo mysql_secure_installation
+
+mysqladmin -u root -p version
+Pathik901#  
+---
+mysql -u root -p
+    CREATE USER 'newuser'@'%' IDENTIFIED BY 'Pathik901#';
+    GRANT ALL PRIVILEGES ON dbone.* TO 'newuser'@'%' ;
+    SHOW GRANTS FOR 'newuser'@'%';
+    SHOW GRANTS FOR 'root'@'%';
+    SHOW GRANTS FOR 'root'@'localhost';
+    CREATE DATABASE dbone;
+mysql -u newuser -p -h 192.168.77.10 --port=3306
+mysql -u newuser -p -h hdpmc1        --port=3306
+    show databases;
+    use  dbone;
+    create table  pet (name VARCHAR(20), owner VARCHAR(20), species VARCHAR(20), sex CHAR(1), birth DATE, death DATE);
+    INSERT INTO pet(name, owner , species , sex , birth, death ) VALUES ('Puffball','Diane','hamster','f','1999-03-30',NULL);
+    INSERT INTO pet(name, owner , species , sex , birth, death ) VALUES ('Musti','Pathik','dog','f','1999-03-30',NULL);    
+    select * from pet;
+Backup 
+    mysqldump -u root --flush-privileges --all-databases -r mysql.dump -p
+    mysql -u root -p < mysql.dump 
+-----------------------------------------------------------------
+-- Validate by connecting from another host ---------------------
+-----------------------------------------------------------------
+#you will only need to install mysql
+mysql -u newuser -p -h 192.168.77.10 --port=3306
+mysql -u newuser -p -h hdpmc1        --port=3306
+    show databases;
+    select * from dbone.pet;
+
+-----------------------------------------------------------------
+-- Connect using Python -----------------------------------------
+-----------------------------------------------------------------
+sudo yum install -y python3
+sudo pip3 install virtualenv
+python3 -m virtualenv venvproj
+. ~/venvproj/bin/activate
+pip3 install mysql-connector-python
+
+$ cat config.py
+MYSQL_HOST="192.168.77.10"
+MYSQL_USER="newuser"
+MYSQL_PASSWORD="Pathik901#"
+MYSQL_DATABASE="dbone"
+
+$ cat   getMySql.py
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor = mydb.cursor()
+mycursor.execute("SELECT * FROM pet")
+myresult = mycursor.fetchall()
+for x in myresult:
+  print(x)
+tablename = 'weather_table'
+create_table = """ create table if not exists %s (
+city TEXT, country TEXT, latitude REAL, longitude REAL, todays_date DATE, humidity REAL, pressure REAL, min_temp REAL, max_temp REAL, temp     REAL, weather  TEXT)""" % tablename
+mycursor.execute(create_table)
+mydb.commit()
+$
+-----------------------------------------------------------------
+-- Loading Data from Pandas Dataframe to MySQL ------------------
+-- Ref: https://github.com/ludwigm/prefect-demo-flow/blob/master/demo_flow/flow.py
+-----------------------------------------------------------------
+def download_data() -> pd.DataFrame:
+#    with urllib.request.urlopen(COVID_DATA_URL) as url:
+#        covid_data = json.loads(url.read().decode())["records"]
+#        covid_df = pd.DataFrame(covid_data)
+#        return covid_df
+    f = open('/vagrant/coviddata.json') 
+    covid_df = pd.DataFrame(json.load(f)['records'])
+    return covid_df    
+
+def filter_data(covid_df: pd.DataFrame, country: str) -> pd.DataFrame:
+    return covid_df[covid_df.countriesAndTerritories == country].copy()
+
+pdf = download_data()
+pdf = filter_data(pdf,"Germany")
+pdf=pdf.rename(columns={"Cumulative_number_for_14_days_of_COVID-19_cases_per_100000": "Cum_14d_per_10k"})
+pdf['dateRep']= pd.to_datetime(pdf['dateRep'])
+--------------------------------------
+create table covid_data (
+ dateRep                 date 
+,day                     integer
+,month                   integer
+,year                    text
+,cases                   integer  
+,deaths                  integer  
+,countriesAndTerritories text 
+,geoId                   text 
+,countryterritoryCode    text 
+,popData2019             real
+,continentExp            text 
+,Cum_14d_per_10k         integer 
+,yr_mth                  text);
+--------------------------------------
+for index, row in pdf.iterrows():
+    nrow=(row.dateRep ,row.day ,row.month ,row.year ,row.cases ,row.deaths ,row.countriesAndTerritories ,row.geoId ,row.countryterritoryCode ,row.popData2019 ,row.continentExp,row.Cum_14d_per_10k ,row.year_month)
+    mycursor.execute("INSERT INTO covid_data (dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",nrow)
+--------------------------------------
+-----------------------------------------------------------------
+-- Copying Data from one Table to another One record at a time --
+-----------------------------------------------------------------
+$ cat CopyTable.py
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor = mydb.cursor()
+create_table = """ create table new_covid_data as select * from covid_data where 1=2"""
+mycursor.execute(create_table)
+mydb.commit()
+mycursor.execute("SELECT count(*) FROM new_covid_data")
+myresult = mycursor.fetchall()
+for x in myresult:
+  print(x)
+$
+$ cat CopyData.py
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor1 = mydb.cursor()
+mycursor2 = mydb.cursor()
+mycursor1.execute("SELECT * FROM covid_data")
+myresult = mycursor1.fetchall()
+for x in myresult:
+  mycursor2.execute("INSERT INTO new_covid_data(dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",x)
+mydb.commit()
+$
+-----------------------------------------------------------------

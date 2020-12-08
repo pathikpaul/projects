@@ -1,0 +1,27 @@
+---------------------------------------------------------------------
+-- Simple Anaconda Installation On CentOS ---------------------------
+---------------------------------------------------------------------
+Ref: http://linuxpitstop.com/install-anaconda-miniconda-conda-on-ubuntu-centos-linux/
+
+#wget http://repo.continuum.io/archive/Anaconda3-4.0.0-Linux-x86_64.sh
+#wget https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh
+wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+
+#bash Anaconda3-4.0.0-Linux-x86_64.sh
+#bash Anaconda3-5.3.1-Linux-x86_64.sh
+bash Anaconda3-2020.11-Linux-x86_64.sh
+        # Typically Installs under /home/hadoop/anaconda3
+        # If you do not log out and log in again you will need to run "source /home/hadoop/.bashrc "
+# Validate the installation 
+conda list
+#conda update conda # if needed
+        
+jupyter notebook --generate-config
+ping -c1 `hostname -f`
+vi /home/hadoop/.jupyter/jupyter_notebook_config.py ## update the IP Address NotebookApp.ip to a suitable IP 
+  Before --# c.NotebookApp.ip = 'localhost'
+  After  --c.NotebookApp.ip = '192.168.77.10'  ## the IP address of your own machine
+cd ~
+jupyter notebook
+    # Notebook URL is displayed
+    # notebook can be accessed via Browser 

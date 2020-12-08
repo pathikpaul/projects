@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+    config.vm.define "hdpmc1" do |hdpmc1| 
+        hdpmc1.vm.box = "bento/centos-7.2"
+        hdpmc1.vm.network "private_network", ip:"192.168.77.10"
+        hdpmc1.vm.hostname = "hdpmc1"
+        hdpmc1.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc1"
+           vb.memory = 4096
+           vb.cpus = 1
+        end
+    end    
+    config.vm.define "hdpmc2" do |hdpmc2| 
+        hdpmc2.vm.box = "bento/centos-7.2"
+        hdpmc2.vm.network "private_network", ip:"192.168.77.11"
+        hdpmc2.vm.hostname = "hdpmc2"
+        hdpmc2.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc2"
+           vb.memory = 4096
+           vb.cpus = 1
+        end
+    end    
+end

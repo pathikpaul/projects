@@ -1,0 +1,232 @@
+Ref: https://docs.prefect.io/core/getting_started/installation.html
+-----------------------------------------------------------------------------
+-- Prefect Installation -----------------------------------------------------
+-----------------------------------------------------------------------------
+conda update conda
+conda install -c conda-forge prefect
+
+I did not install the backend
+
+-----------------------------------------------------------------------------
+-- Prefect Sample Code  -----------------------------------------------------
+-----------------------------------------------------------------------------
+$ cat 1.py
+from prefect import task, Flow, Parameter
+from datetime import timedelta
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def say_hello_world():
+    print("Hello, world!")
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def add(x, y=1):
+    print("adding",x,y,"result=",x + y)
+    return x + y
+
+@task(max_retries=2, retry_delay=timedelta(minutes=1))
+def say_hello(person: str):
+    print("Hello, {}!".format(person))
+
+#################################################
+# Tasks may be run individually
+#################################################
+#say_hello_world.run()
+#say_hello.run("Marvin")
+
+#################################################
+# Functional API
+#################################################
+#with Flow("My first flow!") as flow:
+#    person = Parameter("person")
+#    first_result  = add(x=1,            y=2)
+#    second_result = add(x=first_result, y=100)
+#    say_hello(person,upstream_tasks=[add(2,y=5)])
+#    say_hello_world(upstream_tasks=[say_hello(person)])
+#
+#state = flow.run(person="Marvin")
+#first_task_state = state.result[first_result]
+#second_task_state = state.result[second_result]
+#
+#print ( "first_task_state",   first_task_state)
+#print ( "first_task_result",  first_task_state.result)
+#print ( "second_task_state",  second_task_state)
+#print ( "second_task_result", second_task_state.result)
+#
+
+#################################################
+# Imperative API
+#################################################
+flow = Flow("My imperative flow!")
+name = Parameter("name")
+second_add = add.copy()
+flow.add_task(add)
+flow.add_task(second_add)
+flow.add_task(say_hello)
+flow.add_task(say_hello_world)
+add.set_upstream(say_hello_world, flow=flow)
+add.set_upstream(say_hello, flow=flow)
+say_hello.bind(person=name, flow=flow)
+#add.bind(x=1, y=2, flow=flow) ## This will trigger a failure
+add.bind(x="1", y=2, flow=flow)
+second_add.bind(x=add, y=100, flow=flow)
+
+state = flow.run(name="Marvin")
+print(state)
+-----------------------------------------------------------------------------
+-- run the avove code by using ----------------------------------------------
+-----------------------------------------------------------------------------
+python 1.py
+
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-- Prefect Task Example -----------------------------------------------------
+-- Run a Shell Script 
+-- Read Data from MySQL 
+-- Load data to another MySQL Table
+-- pip install "prefect[mysql]"       ## to install the exta
+-- pip install mysql-connector-python ## to install the connector
+-- Ref: https://docs.prefect.io/api/latest/tasks/shell.html
+-- Ref: https://docs.prefect.io/api/latest/tasks/mysql.html
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+$ cat 3.py
+from prefect import task, Flow, Parameter
+from datetime import timedelta
+from prefect.tasks.mysql.mysql import MySQLExecute,MySQLFetch
+from prefect.tasks.shell import ShellTask
+import mysql.connector
+import config as C
+
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor2 = mydb.cursor()
+
+myshelltask = ShellTask(helper_script="cd /tmp")
+
+sqlfetchtask  = MySQLFetch(db_name="dbone", user="newuser", password="xxxxxxxxx", host="192.168.77.11", port=3306, commit=False, charset="utf8mb4", cursor_type="cursor")
+
+@task(max_retries=1, retry_delay=timedelta(minutes=1))
+def show_shell_op(x):
+   print(x)
+
+@task(max_retries=1, retry_delay=timedelta(minutes=1))
+def process_fetch_res(x):
+   for y in x:
+        mycursor2.execute("INSERT INTO new_covid_data(dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",y)
+        #print(y)
+
+with Flow("My first flow!") as flow:
+    contents = myshelltask(command="pwd")
+    show_shell_op(contents)
+    fetch_res  = sqlfetchtask(query="select * from covid_data", fetch="all", fetch_count=10)
+    process_fetch_res(fetch_res)
+
+state = flow.run()
+mydb.commit()
+print(state)
+
+$ python 3.py
+[2020-12-04 22:58:02+0000] INFO - prefect.FlowRunner | Beginning Flow run for 'My first flow!'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'ShellTask': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'ShellTask': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'MySQLFetch': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'MySQLFetch': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'MySQLFetch': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'process_fetch_res': Starting task run...
+INFO:prefect.TaskRunner:Task 'process_fetch_res': Starting task run...
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'process_fetch_res': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'process_fetch_res': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'show_shell_op': Starting task run...
+INFO:prefect.TaskRunner:Task 'show_shell_op': Starting task run...
+/tmp
+[2020-12-04 22:58:02+0000] INFO - prefect.TaskRunner | Task 'show_shell_op': Finished task run for task with final state: 'Success'
+INFO:prefect.TaskRunner:Task 'show_shell_op': Finished task run for task with final state: 'Success'
+[2020-12-04 22:58:02+0000] INFO - prefect.FlowRunner | Flow run SUCCESS: all reference tasks succeeded
+INFO:prefect.FlowRunner:Flow run SUCCESS: all reference tasks succeeded
+<Success: "All reference tasks succeeded.">
+$
+-----------------------------------------------------------------------------
+-- Ref: https://github.com/ludwigm/prefect-demo-flow/blob/master/demo_flow/flow.py
+-----------------------------------------------------------------------------
+.. Download the file for the example
+.............................................................................
+wget https://opendata.ecdc.europa.eu/covid19/casedistribution/json/
+mv index.html coviddata.json
+$ ls -lh coviddata.json
+-rwxrwxrwx. 1 vagrant vagrant 27M Dec  4 10:01 coviddata.json
+$
+.............................................................................
+.. Run Parts of the example in a Notebook
+.............................................................................
+import json
+import urllib.request
+import pandas as pd
+from datetime import datetime
+COVID_DATA_URL = "https://opendata.ecdc.europa.eu/covid19/casedistribution/json"
+.............................................................................
+#def download_data() -> pd.DataFrame:
+#    with urllib.request.urlopen(COVID_DATA_URL) as url:
+#        covid_data = json.loads(url.read().decode())["records"]
+#        covid_df = pd.DataFrame(covid_data)
+#        return covid_df
+def download_data() -> pd.DataFrame:
+    f = open('/vagrant/coviddata.json') 
+    covid_df = pd.DataFrame(json.load(f)['records'])
+    return covid_df    
+.............................................................................
+def filter_data(covid_df: pd.DataFrame, country: str) -> pd.DataFrame:
+    return covid_df[covid_df.countriesAndTerritories == country].copy()
+.............................................................................
+def aggregate_data(covid_df: pd.DataFrame) -> pd.DataFrame:
+    """Monthly sum of COVID cases"""
+    return (
+        covid_df.groupby("year_month")
+        .agg({"cases": "sum", "deaths": "sum"})
+        .sort_index()
+    )
+.............................................................................
+pdf = download_data()
+pdf = filter_data(pdf,"Germany")
+pdf2 = aggregate_data(pdf)
+pdf2.to_csv('/home/hadoop/work-prefect/covid-monthly-'+str(datetime.now().isoformat())+'.csv')
+.............................................................................
+.. Use Pickle to Save the pandas dataframe if needed
+.............................................................................
+pdf.to_pickle("/home/hadoop/work-prefect/dummy.pkl")
+pdf = pd.read_pickle("/home/hadoop/work-prefect/dummy.pkl")
+.............................................................................
+-----------------------------------------------------------------------------
+-- We want to load the data to MySQL from Pandas ----------------------------
+-----------------------------------------------------------------------------
+-- Run Below on MySQL to create the table needed to copy the data
+mysql -u newuser -p -h 192.168.77.11 --port=3306
+create table covid_data (
+ dateRep                 date 
+,day                     integer
+,month                   integer
+,year                    text
+,cases                   integer  
+,deaths                  integer  
+,countriesAndTerritories text 
+,geoId                   text 
+,countryterritoryCode    text 
+,popData2019             real
+,continentExp            text 
+,Cum_14d_per_10k         integer 
+,yr_mth                  text);
+-----------------------------------------------------------------------------
+-- Run the below on the Jupyter Notebook
+pdf=pdf.rename(columns={"Cumulative_number_for_14_days_of_COVID-19_cases_per_100000": "Cum_14d_per_10k"})
+pdf['dateRep']= pd.to_datetime(pdf['dateRep'])
+
+import mysql.connector
+import config as C
+mydb = mysql.connector.connect(host=C.MYSQL_HOST, user=C.MYSQL_USER, password=C.MYSQL_PASSWORD, database=C.MYSQL_DATABASE,  auth_plugin='mysql_native_password')
+mycursor2 = mydb.cursor()
+mydb.commit()
+
+for index, row in pdf.iterrows():
+    nrow=(row.dateRep ,row.day ,row.month ,row.year ,row.cases ,row.deaths ,row.countriesAndTerritories ,row.geoId ,row.countryterritoryCode ,row.popData2019 ,row.continentExp,row.Cum_14d_per_10k ,row.year_month)
+    mycursor2.execute("INSERT INTO covid_data(dateRep,day,month,year,cases,deaths,countriesAndTerritories,geoId,countryterritoryCode,popData2019,continentExp,Cum_14d_per_10k,yr_mth) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",nrow)
+
+mydb.commit()
+-----------------------------------------------------------------------------
