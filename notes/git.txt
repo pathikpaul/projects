@@ -37,3 +37,27 @@ https://akrabat.com/the-beginners-guide-to-contributing-to-a-github-project/
 	git clone git@github.com:pathikpaul/spark-build.git
 	git checkout spark-hive-patch
 	git diff spark-hive-patch master
+-----------------------------------------------------------------------------
+-- GitHub - Delete commits history with git commands ------------------------
+-----------------------------------------------------------------------------
+Ref: https://gist.github.com/heiswayi/350e2afda8cece810c0f6116dadbe651
+# Clone the project, e.g. `myproject` is my project repository:
+git clone https://github/heiswayi/myproject.git
+
+# Since all of the commits history are in the `.git` folder, we have to remove it:
+cd myproject
+
+# And delete the `.git` folder:
+git rm -rf .git
+
+# Now, re-initialize the repository:
+git init
+git remote add origin https://github.com/heiswayi/myproject.git
+git remote -v
+
+# Add all the files and commit the changes:
+git add --all
+git commit -am "Initial commit"
+
+# Force push update to the master branch of our project repository:
+git push -f origin master
