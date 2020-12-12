@@ -1,0 +1,131 @@
+-----------------------------------------------------------------------------
+-- dask ---------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-- dask worker Setup --------------------------------------------------------
+-----------------------------------------------------------------------------
+Ref:  https://distributed.dask.org/en/latest/quickstart.html#setup-dask-distributed-the-hard-way
+on 192.168.77.10
+$ dask-scheduler --interface enp0s8
+	Scheduler at:  tcp://192.168.77.10:8786
+	dashboard at:        192.168.77.10:8787  
+$ ### Dashboard will be at http://192.168.77.10:8787/
+on 192.168.77.11 & 192.168.77.12
+$ dask-worker 192.168.77.10:8786
+$ dask-worker 192.168.77.10:8786
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+In[1]:
+         from dask import delayed
+         import dask.dataframe as dd
+In[2]:
+         from dask.distributed import Client
+         #client = Client()## for processing on local machine
+         client = Client('tcp://192.168.77.10:8786')
+         client
+Out[2]:  
+         Scheduler: tcp://192.168.77.10:8786
+         Dashboard: http://192.168.77.10:8787/status
+         Cluster Workers: 2 Cores: 2 Memory: 3.86 GB
+In[3]:
+         def load_file():
+             HeaderNames=['id','first_name','last_name','email','gender','ip_address']
+             return dd.read_csv('/home/hadoop/work/d/MOCK_DATA.csv.*',header=None,names=HeaderNames)
+In[4]:
+         df = delayed(load_file)()
+         df.map_partitions()
+         df = df.assign(short_ln=df.last_name.str[:3])
+In[5]:
+         ndf=df.short_ln.value_counts(sort=True).to_frame()
+In[6]:
+         %%time
+         ndf.compute().head(5)
+Out[6]:  
+         CPU times: user 1.51 s, sys: 3.77 s, total: 5.29 s
+         Wall time: 1min 44s
+         short_ln
+         Har	110000
+         Mac	100000
+         Mar	90000
+         Mat	80000
+         Woo	80000
+*****************************************
+** Took 1min 44s using 2 remote worker **
+** Took 2min 38s using 1 remote worker **
+*****************************************
+-----------------------------------------------------------------------------
+-- Data Setup ---------------------------------------------------------------
+-----------------------------------------------------------------------------
+Started with /vagrant/MOCK_DATA.csv ## created using https://www.mockaroo.com/
+Removed the Header Record (1000 data records in the file)
+Copied the file without the header record 10,000 times so 10000*1000 records
+## #!/bin/bash
+## /bin/rm -f /home/hadoop/work/d/*
+## myMax=10000
+## for ((i=1;i<=${myMax};i++));
+## do
+##    cp MOCK_DATA.csv_no_header   /home/hadoop/work/d/MOCK_DATA.csv.${i}
+## done
+## $ ls -l /home/hadoop/work/d/* | wc -l
+## 10000
+## $ du -sh /home/hadoop/work/d
+## 626M    /home/hadoop/work/d
+-----------------------------------------------------------------------------
+-- Pandas Code for comparison -----------------------------------------------
+-----------------------------------------------------------------------------
+## Using one Large File -- Created using below 
+## #!/bin/bash
+## :>MOCK_DATA_LARGE.csv
+## myMax=3500
+## for ((i=1;i<=${myMax};i++));
+## do
+##    cat MOCK_DATA.csv_no_header>> MOCK_DATA_LARGE.csv
+## done
+
+##
+import pandas as pd
+HeaderNames=['id','first_name','last_name','email','gender','ip_address']
+pdf = pd.read_csv('/home/hadoop/work/MOCK_DATA_LARGE.csv',header=None,names=HeaderNames)
+pdf['short_ln']=pdf['last_name'].str[:3]
+df=pdf.groupby('short_ln').count()[['id']]
+df = df.rename(columns={"id": "count"})
+print(df.sort_values(by=['count'],ascending=False).head(5))
+-----------------------------------------------------------------------------
+-- Vagrantfile --------------------------------------------------------------
+-----------------------------------------------------------------------------
+$ cat /vagrant/Vagrantfile
+Vagrant.configure("2") do |config|
+    config.vm.define "hdpmc1" do |hdpmc1|
+        hdpmc1.vm.box = "bento/centos-7.2"
+        hdpmc1.vm.network "private_network", ip:"192.168.77.10"
+        hdpmc1.vm.hostname = "hdpmc1"
+        hdpmc1.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc1"
+           vb.memory = 2048
+           vb.cpus = 1
+        end
+    end
+    config.vm.define "hdpmc2" do |hdpmc2|
+        hdpmc2.vm.box = "bento/centos-7.2"
+        hdpmc2.vm.network "private_network", ip:"192.168.77.11"
+        hdpmc2.vm.hostname = "hdpmc2"
+        hdpmc2.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc2"
+           vb.memory = 2048
+           vb.cpus = 1
+        end
+    end
+    config.vm.define "hdpmc3" do |hdpmc3|
+        hdpmc3.vm.box = "bento/centos-7.2"
+        hdpmc3.vm.network "private_network", ip:"192.168.77.12"
+        hdpmc3.vm.hostname = "hdpmc3"
+        hdpmc3.vm.provider :virtualbox do |vb|
+           vb.name = "hdpmc3"
+           vb.memory = 2048
+           vb.cpus = 1
+        end
+    end
+$
+-----------------------------------------------------------------------------
+-- END ----------------------------------------------------------------------
+-----------------------------------------------------------------------------
