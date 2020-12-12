@@ -1,14 +1,19 @@
 Ref: https://docs.prefect.io/core/getting_started/installation.html
 -----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Prefect Installation -----------------------------------------------------
+-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 conda update conda
 conda install -c conda-forge prefect
-
+conda install -c conda-forge prefect==0.13.13
+   -- only this version worked with Dask
 I did not install the backend
 
 -----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- Prefect Sample Code  -----------------------------------------------------
+-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 $ cat 1.py
 from prefect import task, Flow, Parameter
@@ -72,11 +77,38 @@ second_add.bind(x=add, y=100, flow=flow)
 
 state = flow.run(name="Marvin")
 print(state)
------------------------------------------------------------------------------
--- run the avove code by using ----------------------------------------------
------------------------------------------------------------------------------
+.............................................................................
+.. run the avove code by using ..............................................
+.............................................................................
 python 1.py
 
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+-- Prefect with SQLITE ------------------------------------------------------
+-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+from prefect import task, Flow, Parameter
+from datetime import timedelta
+from prefect.tasks.database.sqlite import SQLiteQuery
+import pandas as pd
+
+sqlfetchtask  = SQLiteQuery(db="/home/hadoop/work/pythonsqlite.db", query=None)
+
+@task(max_retries=1, retry_delay=timedelta(minutes=1))
+def process_fetch_res(x):
+   global pdf
+   pdf = pd.DataFrame.from_records(x, columns =['id','first_name','last_name','email','gender','ip_address'])
+
+with Flow("My first flow!") as flow:
+    fetch_res  = sqlfetchtask(query='select * from people')
+    process_fetch_res(fetch_res)
+
+state = flow.run()
+pdf['short_ln']=pdf['last_name'].str[:3]
+df=pdf.groupby('short_ln').count()[['id']]
+df = df.rename(columns={"id": "count"})
+print(df.sort_values(by=['count'],ascending=False).head(5))
+print(state)
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -- Prefect Task Example -----------------------------------------------------

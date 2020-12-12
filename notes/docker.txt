@@ -15,6 +15,9 @@ $ docker run hello-world  ## after logout and relogin
     This message shows that your installation appears to be working correctly.
     :::::: More O/P produced .. Pathik Pathik ::
 $
+*********************************
+** Some issues with Networking **
+*********************************
 -----------------------------------------------------------------------------
 $ cat Vagrantfile
 Vagrant.configure("2") do |config|

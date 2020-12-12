@@ -25,3 +25,38 @@ cd ~
 jupyter notebook
     # Notebook URL is displayed
     # notebook can be accessed via Browser 
+---------------------------------------------------------------------
+-- Simple Notebook --------------------------------------------------
+---------------------------------------------------------------------
+import pandas as pd
+import sqlite3
+conn = sqlite3.connect("/home/hadoop/work/pythonsqlite.db")
+cur = conn.cursor()
+
+pdf=pd.read_sql(sql='select * from people', con=conn, index_col=None)
+
+pdf['short_ln']=pdf['last_name'].str[:3]
+
+df=pdf.groupby('short_ln').count()[['id']]
+df = df.rename(columns={"id": "count"})
+df.sort_values(by=['count'],ascending=False).head(5)
+
+df2=pdf['short_ln'].value_counts().to_frame('count')
+print(df2.sort_values(by=['count'],ascending=False).head(5))
+
+## kernel died with approx 500MB File
+## worked with 232M file ## 3500 * 1000 records 
+## $ free -h
+##              total        used        free      shared  buff/cache   available
+## Mem:           1.8G        129M        578M        3.8M        1.1G        1.5G
+## Swap:          2.0G        4.5M        2.0G
+## $ lscpu
+## Architecture:          x86_64
+## CPU op-mode(s):        32-bit, 64-bit
+## Byte Order:            Little Endian
+## CPU(s):                1
+## Thread(s) per core:    1
+## Core(s) per socket:    1
+---------------------------------------------------------------------
+-- END --------------------------------------------------------------
+---------------------------------------------------------------------
