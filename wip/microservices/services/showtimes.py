@@ -1,4 +1,4 @@
-from services import root_dir, nice_json
+from common import root_dir, nice_json
 from flask import Flask
 from werkzeug.exceptions import NotFound
 import json
@@ -34,4 +34,4 @@ def showtimes_record(date):
     return nice_json(showtimes[date])
 
 if __name__ == "__main__":
-    app.run(port=5002, debug=True)
+    app.run(port=5002, host= '0.0.0.0' ,debug=True)

@@ -1,4 +1,5 @@
-from services import root_dir, nice_json
+#from services import root_dir, nice_json
+from common import root_dir, nice_json
 from flask import Flask
 from werkzeug.exceptions import NotFound, ServiceUnavailable
 import json
@@ -89,4 +90,4 @@ def user_suggested(username):
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5000, host= '0.0.0.0' ,debug=True)

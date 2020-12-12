@@ -1,4 +1,4 @@
-from services import root_dir, nice_json
+from common import root_dir, nice_json
 from flask import Flask
 import json
 from werkzeug.exceptions import NotFound
@@ -34,5 +34,5 @@ def booking_record(username):
     return nice_json(bookings[username])
 
 if __name__ == "__main__":
-    app.run(port=5003, debug=True)
+    app.run(port=5003, host= '0.0.0.0' ,debug=True)
 
