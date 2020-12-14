@@ -4,8 +4,8 @@ https://github.com/umermansoor/microservices
 git clone https://github.com/umermansoor/microservices
 
 
-To run 
-------
+To run using Python2
+--------------------
 . ~/venv/bin/activate
 cd /home/ec2-user/projects/wip/microservices
 python services/movies.py

@@ -1,0 +1,39 @@
+---------------------------------------------------------------------
+-- Initial Config ---------------------------------------------------
+---------------------------------------------------------------------
+t3.micro	
+Amazon Linux 2 AMI (HVM), SSD Volume Type
+8gB
+---------------------------------------------------------------------
+-- For Python3 ------------------------------------------------------
+---------------------------------------------------------------------
+sudo yum install -y python3
+sudo pip3 install virtualenv
+cd ~
+python3 -m virtualenv venv
+. ~/venv/bin/activate
+---------------------------------------------------------------------
+-- For Docker -------------------------------------------------------
+---------------------------------------------------------------------
+sudo yum update -y
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo service docker status
+sudo usermod -a -G docker ec2-user
+## Log out and logback in
+docker info
+---------------------------------------------------------------------
+-- Install git client -----------------------------------------------
+---------------------------------------------------------------------
+sudo yum -y install git
+
+git config --global user.name "Pathik Paul"
+git config --global user.email "you@example.com"
+git config credential.helper cache
+git config --global credential.helper store
+cd ~
+git clone https://github.com/pathikpaul/projects
+cd ~/projects
+---------------------------------------------------------------------
+-- END --------------------------------------------------------------
+---------------------------------------------------------------------
