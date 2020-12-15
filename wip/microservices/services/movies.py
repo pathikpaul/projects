@@ -1,10 +1,12 @@
 from common import root_dir, nice_json
 from flask import Flask
+from flask_cors import CORS
 from werkzeug.exceptions import NotFound
 import json
 
 
 app = Flask(__name__)
+CORS(app)
 
 with open("{}/database/movies.json".format(root_dir()), "r") as f:
     movies = json.load(f)

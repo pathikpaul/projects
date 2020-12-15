@@ -1,0 +1,4 @@
+. ~/venv/bin/activate
+pip3 install Flask==1.1.2
+pip3 install requests==2.25.0
+pip3 install flask-cors
