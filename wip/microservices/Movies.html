@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Movies</title>
+</head>
+
+<body>
+  <h1>Movies</h1>
+  <p id="demo"></p>
+  <button onclick="getAllMovies();">Get All Movies</button>
+
+  <script>
+    'use strict';
+
+    const URL = "http://192.168.77.10:5001/movies";
+   
+    function getAllMovies() {
+      let req = new XMLHttpRequest();
+      req.onreadystatechange = function () {
+        var myTblStr=`<table border="1">`;
+	    myTblStr=myTblStr+`<tr><th>id</th><th>rating</th><th>rating</th><th>title</th></tr>`;
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+          let rr = JSON.parse(this.response); 
+          /*
+		  console.log("this.response=", rr);
+          console.log("response.status=",this.status);
+          console.log("response.statusTex=",this.statusText);
+          console.log("response.data=",this.response);
+          console.log("response.keys=",Object.keys(rr)); 
+		  */
+		  for (var key in rr) {
+		      /*
+              console.log(key + " -> " +rr[key].rating+",  "+rr[key].director+",   "+rr[key].title); 
+			  console.log("<tr><td>"+key +"</td><td>"+rr[key].rating+"</td><td>"+rr[key].director+"</td><td>"+rr[key].title+"</td></tr>"); 
+			  */
+			  myTblStr=myTblStr+"<tr><td>"+key +"</td><td>"+rr[key].rating+"</td><td>"+rr[key].director+"</td><td>"+rr[key].title+"</td></tr>";;
+		  }		  
+        }
+		myTblStr=myTblStr+'</table>'
+        document.getElementById("demo").innerHTML = myTblStr;
+      };
+      req.open("GET", URL);
+      req.send();
+    }
+  </script>
+</body>
+
+</html>
