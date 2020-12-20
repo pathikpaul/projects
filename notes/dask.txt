@@ -129,3 +129,16 @@ $
 -----------------------------------------------------------------------------
 -- END ----------------------------------------------------------------------
 -----------------------------------------------------------------------------
+
+need to install dask and pyarrow
+
+import pandas as pd
+import dask.dataframe as dd
+## CSV to Pandas to Parquet
+pdf=pd.read_csv('/home/ec2-user/MOCK_DATA.csv')
+ddf=dd.from_pandas(pdf,npartitions=3)
+ddf.to_parquet('/home/ec2-user/PRQ',engine='pyarrow')
+
+## CSV to Parquet
+ddf=dd.read_csv('/home/ec2-user/MOCK_DATA.csv')
+ddf.to_parquet('/home/ec2-user/PRQ',engine='pyarrow')

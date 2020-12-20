@@ -6,13 +6,22 @@ git clone https://github.com/umermansoor/microservices
 
 To run using Python2
 --------------------
+sudo yum install python-virtualenv
+cd ~
+python -m virtualenv venv
 . ~/venv/bin/activate
-cd /home/ec2-user/projects/wip/microservices
+cd ~/projects/wip/microservices
+pip install Flask==1.1.2
+pip install requests==2.25.0
+pip install Flask-Cors==3.0.9
+cd ~/projects/wip/microservices
 python services/movies.py
 python services/showtimes.py
 python services/bookings.py
 python services/movies.py
 python services/user.py
+cd ~/projects/wip/microservices
+pip freeze > requirements.txt
 
 To run using Python3
 --------------------
@@ -23,6 +32,8 @@ python3 -m virtualenv venv
 . ~/venv/bin/activate
 pip3 install Flask==1.1.2
 pip3 install requests==2.25.0
+pip3 install Flask-Cors==3.0.9
+cd ~/projects/wip/microservices
 pip freeze > requirements.txt
 
 To Run using Docker
@@ -31,3 +42,12 @@ docker build -f ./Dockerfile.user -t ppaul/catnip .
 docker build -f ./Dockerfile.movies -t ppaul/catnip .
 docker run -p 8888:5000 ppaul/catnip
 docker run -p 8888:5001 ppaul/catnip
+
+Some of the changes made after copying from https://github.com/umermansoor/microservices
+-----------------------------------
+sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/movies.py
+sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/showtimes.py
+sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/bookings.py
+sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/user.py
+
+
