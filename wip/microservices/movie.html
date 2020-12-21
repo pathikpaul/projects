@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Movie</title>
+</head>
+
+<body>
+  <h1>Movie</h1>
+  <p id="demo"></p>
+
+  <script>
+    'use strict';
+    var movieId="267eedb8-0f5d-42d5-8f43-72426b9fb3e6"
+    if (window.location.search) {
+        console.log("window.location.search=",window.location.search);
+        console.log("typeof window.location.search=",typeof window.location.search);
+        movieId=window.location.search.split('=')[1];
+    }
+    const URL = "http://192.168.77.10:5001/movies/"+movieId;
+    let req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+          let rr = JSON.parse(this.response); 
+          document.getElementById("demo").innerHTML = this.response;
+        }
+    };
+    req.open("GET", URL);
+    req.send();
+  </script>
+</body>
+
+</html>
