@@ -50,4 +50,14 @@ sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/showtimes.py
 sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/bookings.py
 sed -i.bak "s/debug=True/host= '0.0.0.0' ,debug=True/g" services/user.py
 
+To Display the front end using Python Flask
+-------------------------------------------
+python frontend/application.py
+http://192.168.77.10:5009/  ## if using Vagrant
+
+For Autentication - To do
+-------------------------
+https://realpython.com/token-based-authentication-with-flask/
+https://www.freecodecamp.org/news/securing-node-js-restful-apis-with-json-web-tokens-9f811a92bb52/
+
 
