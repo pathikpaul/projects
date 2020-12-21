@@ -18,7 +18,6 @@ cd ~/projects/wip/microservices
 python services/movies.py
 python services/showtimes.py
 python services/bookings.py
-python services/movies.py
 python services/user.py
 cd ~/projects/wip/microservices
 pip freeze > requirements.txt
