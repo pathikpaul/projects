@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %} Movie Details Page{% endblock %}
+{% block content %}
+<h1>Movie Details Page</h1>
+<style>
+td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; }
+tr:nth-child(even) { background-color: #dddddd; }
+</style>
+
+"director": {{notes["director"]}}</br>
+"id":       {{notes["id"]}}</br>
+"rating":   {{notes["rating"]}}</br>
+"title":    {{notes["title"]}}</br>
+
+</br></br> <b> <a href="{{ url_for('welcome') }}">Welcome Page</a> </b>
+{% endblock %}

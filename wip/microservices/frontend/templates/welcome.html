@@ -7,14 +7,16 @@ td, th { border: 1px solid #dddddd; text-align: left; padding: 8px; }
 tr:nth-child(even) { background-color: #dddddd; }
 </style>
 
+<strong>{{message}}</strong>
+</br>
 <table>
   <tr> <th>#</th> <th>date</th> <th>movie</th> </tr>
    {% for note in notes %}
   <tr> <td> {{loop.index0}}</a></td> <td>{{note}}</td> <td></td> </tr>
        {% for movie in notes[note] %}
-       <tr> <td></td> <td></td> <td><a href="http://192.168.77.10:5001/movies/{{movie}}">{{movie}}</a></td> </tr>
+       <tr> <td></td> <td></td> <td><a href="{{ url_for('get_moviedetails',movieid=movie) }}">{{movie}}</a></td> </tr>
        {% endfor %}
    {% endfor %}
 </table>
-
+</br>
 {% endblock %}
