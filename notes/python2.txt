@@ -1,0 +1,5 @@
+sudo yum install python-virtualenv
+cd ~
+python2 -m virtualenv venv
+cd ~
+. ~/venv/bin/activate
