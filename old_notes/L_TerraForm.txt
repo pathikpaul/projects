@@ -1,0 +1,37 @@
+2021/12/05
+https://www.ktexperts.com/how-to-install-terraform-in-amazon-ec2-instance/
+
+
+https://learn.hashicorp.com/collections/terraform/aws-get-started
+
+03 MIN	Introduction to Infrastructure as Code with Terraform
+07 MIN	Install Terraform
+	wget  https://releases.hashicorp.com/terraform/1.0.11/terraform_1.0.11_linux_amd64.zip
+	unizp terraform_1.0.11_linux_amd64.zip
+	./terraform
+	./terraform -version
+11 MIN	Build Infrastructure
+     aws configure
+     mkdir /home/ec2-user/learn-terraform-aws-instance
+	 cd    /home/ec2-user/learn-terraform-aws-instance
+	 vi main.tf
+	 /home/ec2-user/terraform/terraform init
+	 /home/ec2-user/terraform/terraform fmt
+	 /home/ec2-user/terraform/terraform validate
+	 /home/ec2-user/terraform/terraform apply
+	 /home/ec2-user/terraform/terraform show
+	 /home/ec2-user/terraform/terraform state list
+04 MIN	Change Infrastructure
+02 MIN	Destroy Infrastructure
+	/home/ec2-user/terraform/terraform destroy
+03 MIN	Define Input Variables
+	 vi variables.tf
+    /home/ec2-user/terraform/terraform  apply
+    /home/ec2-user/terraform/terraform  apply -var "instance_name=YetAnotherName"
+03 MIN	Query Data with Outputs
+    vi outputs.tf
+	/home/ec2-user/terraform/terraform apply
+	/home/ec2-user/terraform/terraform output
+	/home/ec2-user/terraform/terraform destroy
+#7 MIN	Store Remote State 
+       on Terraform Cloud Account
