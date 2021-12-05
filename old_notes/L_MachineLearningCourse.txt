@@ -1,0 +1,73 @@
+To Review
+    https://www.analyticsvidhya.com/blog/2016/10/16-new-must-watch-tutorials-courses-on-machine-learning/
+   
+AML Pricing
+    https://aws.amazon.com/machine-learning/pricing/
+AML Tutorial
+    http://docs.aws.amazon.com/machine-learning/latest/dg/tutorial.html
+
+AWS Machine Learning 
+
+- Batch Predictions
+- Real Time Predictions
+
+- Supervised
+- UnSupervised
+
+- Binary Classification
+- Multi Class Classification ( possible finite outcome choices)
+- Regression (Numerical Value)
+
+Need
+- Data
+- Question
+
+- Rules are difficult to figure out 
+
+Common use cases
+	- is email spam or regular
+	- detect fraud 
+	- provide product or service recommendations based on customer history (netflix / amazon)
+	- customer churn analysis : identify customers who are considering changing providers , or customer who is about to abandon shopping cart
+	- identifying cusomers who are most likely to recive marketing feedback (social media)
+
+Formulating machine Learning Problem
+	- Historical data
+	- Target awnser
+
+https://archive.ics.uci.edu/ml/datasets/bank+Marketing
+Historical telemarkeing data by a  bank
+- potential customer for targeted marking 
+- Inputs
+	Historical Data with features
+	Historical Response
+- Outcomes
+	- potential customer
+	- Not potential customer
+
+How much Data
+	- Begin with what you have 
+Train and test a model
+	- Loading the data
+	Amazon ML will help in - Split data into training and testing data set
+	Amazon ML will help in - Creating a Model using training data set
+	Amazon ML will help in - testing ML model against testing set
+	- Evaluating the model performance
+
+
+https://discuss.analyticsvidhya.com/t/what-is-machine-learning-and-how-is-it-different-from-big-data-and-business-analytics/306/2
+        Machine Learing: Making use of the algorithms and try to predict results.
+        Business Analytics: Writing Code to meet business needs.
+https://discuss.analyticsvidhya.com/t/what-is-the-difference-between-machine-learning-data-analysis-data-mining-data-science-and-ai/572/2
+Data Science: Refers to the umbrella of techniques where you are trying to extract information and insights from data. 
+
+Data Mining: Pefers to the science of collecting all the past data and then searching for patterns in this data. 
+            You look for consistent patterns and / or relationships between variables. 
+            Once you find these insights, you validate the findings by applying the detected patterns to new subsets of data. 
+            The ultimate goal of data mining is prediction - and predictive data mining is the most common type of data mining and one that has the most direct business applications.
+
+Data Analysis: Predictive modelers. Any attempt to make sense of data can be called as data analysis.
+
+Machine learning - is the science of creating algorithms and program which learn on their own. 
+    Once designed, they do not need a human to become better. 
+    

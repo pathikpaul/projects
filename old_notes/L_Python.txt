@@ -1,0 +1,35 @@
+Install Python
+
+sudo yum groupinstall "Development tools"
+wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz
+
+mkdir -p /home/hadoop/py
+tar xf Python-3.* 
+cd Python-3.*
+./configure
+sudo make
+sudo make install
+sudo make altinstall
+
+/home/hadoop/py/Python-3.6.2/python
+
+#!/home/hadoop/py/Python-3.6.2/python
+import sys
+import time
+
+print (sys.version)
+time.sleep(7)
+===========================
+http://jupyter.readthedocs.io/en/latest/install.html#prerequisite-python
+
+Annaconda:
+    http://linuxpitstop.com/install-anaconda-miniconda-conda-on-ubuntu-centos-linux/
+        wget http://repo.continuum.io/archive/Anaconda3-4.0.0-Linux-x86_64.sh
+        bash Anaconda3-4.0.0-Linux-x86_64.sh
+        /home/hadoop/anaconda3
+        source /home/hadoop/.bashrc
+        conda list
+        conda update conda
+        
+        jupyter notebook
+        ~/anaconda3/bin/jupyter-console

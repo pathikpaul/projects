@@ -1,0 +1,233 @@
+========================================================================================================
+== Options for Learning ================================================================================
+========================================================================================================
+#1
+	http://open.mesosphere.com/advanced-course/
+#2
+    http://pdf.th7.cn/down/files/1602/Apache%20Mesos%20Essentials.pdf
+
+=======================================================================================================
+== 2017/09/23 ==========================================================================================
+========================================================================================================
+Vagrantfile
+Vagrant.configure("2") do |config|
+config.vm.box = "bento/centos-7.1"
+   config.vm.define "node1" do |node1|
+      node1.vm.network "private_network", ip: "192.168.33.10"
+      node1.vm.hostname = "node1"
+      ##node1.vm.box = "mesos-master"
+      node1.vm.provider :virtualbox do |vb|
+           vb.name = "node1"
+           vb.memory = 3072
+           vb.cpus = 1
+      end
+  end
+  config.vm.define "node2" do |node2|
+      node2.vm.network "private_network", ip: "192.168.33.11"
+      node2.vm.hostname = "node2"
+      node2.vm.provider :virtualbox do |vb|
+           vb.name = "node2"
+           vb.memory = 3072
+           vb.cpus = 1
+      end
+  end
+  config.vm.define "node3" do |node3|
+      node3.vm.network "private_network", ip: "192.168.33.12"
+      node3.vm.hostname = "node3"
+      node3.vm.provider :virtualbox do |vb|
+           vb.name = "node3"
+           vb.memory = 3072
+           vb.cpus = 1
+      end
+  end
+end 
+ 
+su -
+groupadd hadoop
+useradd hadoop -g hadoop
+passwd hadoop
+visudo
+
+
+
+Mesos: 		http://192.168.33.10:5050
+Marathon:	http://192.168.33.10:8080/ui/#/apps
+
+	http://open.mesosphere.com/advanced-course/
+192.168.33.10
+192.168.33.11
+192.168.33.12
+
+
+Exercise 1 – Installing Software
+	sudo rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+	sudo yum -y install mesos marathon
+
+Exercise 2 – Installing ZooKeeper
+	sudo rpm -Uvh http://archive.cloudera.com/cdh4/one-click-install/redhat/6/x86_64/cloudera-cdh-4-0.x86_64.rpm
+	sudo yum -y install zookeeper zookeeper-server
+	sudo -u zookeeper zookeeper-server-initialize --myid=1
+	sudo service zookeeper-server start
+
+	Use the interactive shell to test your installation:
+	[node1]$ /usr/lib/zookeeper/bin/zkCli.sh
+	        [[ Ref http://open.mesosphere.com/advanced-course/installing-zookeeper/ ]]
+	        help
+	        create /test 1
+	        get /test 
+	        set /test 2
+	        get /test
+	        delete /test
+	        quit
+	sudo service zookeeper-server stop
+	sudo service zookeeper-server start
+Exercise 3 – Using Apache Mesos
+	sudo service mesos-master stop
+	sudo service mesos-slave stop
+	sudo service mesos-master start
+	sudo service mesos-slave start
+	sudo netstat -nlp | grep mesos
+	    [root@base ~]# sudo netstat -nlp | grep mesos
+	    tcp        0      0 0.0.0.0:5050            0.0.0.0:*               LISTEN      2487/mesos-master
+	    tcp        0      0 0.0.0.0:5051            0.0.0.0:*               LISTEN      2535/mesos-slave
+	    [root@base ~]#
+	http://192.168.33.10:5050/ 
+	export MASTER=$(mesos-resolve `cat /etc/mesos/zk` 2>/dev/null)
+		MASTER=192.168.33.10:5050
+	mesos help
+	mesos-execute --master=$MASTER --name="cluster-test" --command="sleep 40"
+	mesos ps --master=$MASTER
+Exercise 4 – Starting Marathon
+	sudo service marathon start
+	http://192.168.33.10:8080/ui/#/apps  or http://192.168.33.10:8080/ui/#/apps
+	
+	create new app
+	    python -m SimpleHTTPServer   ## default is 8000
+	    http://192.168.1.14:8000/
+	    see the stderr and stdout
+
+Exercise 5 – Using the Marathon GUI
+	    python -m SimpleHTTPServer $PORT
+	       0.1 CPU // 32 MB
+	       We can scale to 2 Apps
+
+Marathon Rest APIs
+    http://0.0.0.0:8080/metrics
+    http://0.0.0.0:8080/v2/apps
+    http://0.0.0.0:8080/v2/apps/test1
+    curl -X DELETE http://0.0.0.0:8080/v2/apps/test1    
+
+Mesos DNS
+	sudo yum -y install golang git bind-utils
+	mkdir ~/go
+	export GOPATH=$HOME/go
+	export PATH=$PATH:$GOPATH/bin
+	go get github.com/tools/godep
+	go get github.com/mesosphere/mesos-dns
+	cd $GOPATH/src/github.com/mesosphere/mesos-dns
+	godep go build .
+    http://open.mesosphere.com/advanced-course/building-and-running-mesos-dns/
+	sudo vi /etc/resolv.conf  ## Add below to first line 
+		nameserver 192.168.33.10
+
+    http://open.mesosphere.com/advanced-course/building-and-running-mesos-dns/
+    <   "zk": "zk://192.168.1.2:2181/mesos",
+    <   "masters": ["192.168.1.2:5050"],
+    <   "port": 53,
+    >   "zk": "zk://127.0.0.1:2181/mesos",
+    >   "masters": ["127.0.0.1:5050"],
+    >   "port": 8053,
+
+    sudo /home/vagrant/go/src/github.com/mesosphere/mesos-dns/mesos-dns -v=1 -config=/home/vagrant/go/src/github.com/mesosphere/mesos-dns/config.json
+    curl 
+        http://192.168.33.10:8123/v1/version
+        http://192.168.33.10:8123/v1/config
+    
+        http://192.168.33.10:8123/v1/hosts/test1.marathon.mesos
+
+** How to tell master about the list of slaves
+
+Chronos
+    sudo yum -y install chronos
+    sudo service chronos start
+    http://192.168.33.10:4400/
+        sleep 
+        
+2nd marathon slave
+    
+Node2
+Exercise 1 – Installing Software
+	sudo rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm
+	sudo yum -y install mesos 
+    sudo vi /etc/hosts
+            192.168.33.10 node1     node1
+            192.168.33.11 node2     node2
+            192.168.33.12 node3     node3
+
+    
+    sudo vi /etc/mesos/zk
+            zk://192.168.33.10:2181/mesos
+        sudo service mesos-slave start
+        sudo chkconfig mesos-slave on
+	sudo chkconfig mesos-master off
+        sudo service mesos-master stop
+	systemctl list-unit-files | grep mesos
+	sudo netstat -nlp | grep meso
+ (Master)
+		sudo chkconfig mesos-master on
+		sudo chkconfig mesos-slave on
+		sudo chkconfig marathon on
+		sudo chkconfig zookeeper-server on
+        
+        You may need to restart mesos-master and mesos-slave on node1 to see the second node in "Agents" tab
+        
+        hostname:CLUSTER:node2.centos73.pathik
+        hostname:CLUSTER:base.centos73.pathik
+Docker Web App
+    sudo yum install -y golang git device-mapper-event-libs docker
+    sudo chkconfig docker on
+    sudo service docker start
+    export GOPATH=~/go
+    go get github.com/golang/example/outyet
+    cd $GOPATH/src/github.com/golang/example/outyet
+    sudo docker build -t outyet .
+    sudo docker run --publish 6060:8080 --name test --rm outyet
+        http://192.168.33.10:6060/
+    https://open.mesosphere.com/advanced-course/deploying-a-web-app-using-docker/
+    vi /home/hadoop/outyet.json 
+    curl -X POST http://192.168.33.10:8080/v2/apps -d @/home/hadoop/outyet.json -H "Content-type: application/json"
+
+Exercise 13 – Distributing Docker To Multiple Nodes
+Save the Docker
+    sudo docker save --output=/home/hadoop/outyet.tar.gz outyet
+Load it on node2 
+    sudo yum install -y device-mapper-event-libs docker
+    sudo chkconfig docker on
+    sudo service docker start
+    echo 'docker,mesos' | sudo tee /etc/mesos-slave/containerizers
+    sudo service mesos-slave restart
+    sudo docker load --input=/home/hadoop/outyet.tar.gz
+    sudo docker run --publish 6060:8080 --name test --rm outyet
+Tell Marathon to "scale"
+
+Exercise 14 – Installing and Using DCOS CLI
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        sudo python get-pip.py
+        sudo pip install virtualenv
+        sudo pip install mesos.cli
+        --
+        mesos help
+        ** WIP **
+Exercise 15 – Starting Four Nodes
+Exercise 16 – Recreating the Cluster Using Ansible
+Exercise 17 – Advanced Usage of Marathon
+	https://mesosphere.github.io/marathon/docs/rest-api.html        
+	MARATHON=http://192.168.33.10:8080
+	curl -X POST "$MARATHON/v2/apps" -d @"dns.json" -H "Content-type: application/json"
+
+===========================================================================================================
+DCOS 1.9 
+https://raw.githubusercontent.com/dcos/dcos-vagrant/master/Vagrantfile
+	- did not work 
+1.2 something .... 
+https://github.com/dcos/dcos-vagrant-box/blob/master/Vagrantfile

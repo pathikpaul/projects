@@ -1,0 +1,100 @@
+-----------------------------------------------------------------------------------
+192.168.77.10   zkdmc1  
+192.168.77.11   zkdmc2  
+192.168.77.12   zkdmc3  
+192.168.77.13   zkdmc4  
+-----------------------------------------------------------------------------------
+https://zookeeper.apache.org/doc/trunk/zookeeperStarted.html
+
+sudo yum install -y java-1.8.0-openjdk-devel
+
+wget http://download.nextag.com/apache/zookeeper/zookeeper-3.4.10/zookeeper-3.4.10.tar.gz
+
+cd /home/hadoop
+tar -xvf /vagrant/zookeeper-3.4.10.tar.gz
+cp -fp /home/hadoop/zookeeper-3.4.10/conf/zoo_sample.cfg /home/hadoop/zookeeper-3.4.10/conf/zoo.cfg
+
+cd /home/hadoop/zookeeper-3.4.10; bin/zkServer.sh start
+cd /home/hadoop/zookeeper-3.4.10; bin/zkServer.sh stop
+
+bin/zkCli.sh -server 127.0.0.1:2181
+	ls /
+	create /zk_test my_data
+	ls /
+	get /zk_test
+	set /zk_test junk
+	get /zk_test
+	delete /zk_test
+	ls /
+-----------------------------------------------------------------------------------
+Running Replicated ZooKeeper [[ 3 node cluster ]]
+
+Singel Node
+	[hadoop@zkdmc1 conf]$ grep -v ^# zoo.cfg
+		tickTime=2000
+		initLimit=10
+		syncLimit=5
+		dataDir=/tmp/zookeeper
+		clientPort=2181
+	[hadoop@zkdmc1 conf]$
+For 3 Node -- add the below
+    server.1=192.168.77.10:2888:3888
+    server.2=192.168.77.11:2888:3888
+    server.3=192.168.77.12:2888:3888
+
+    
+vi /tmp/zookeeper/myid
+
+cd /home/hadoop/zookeeper-3.4.10
+bin/zkServer.sh start
+
+-----------------------------------------------------------------------------------
+Open Ldap
+    https://www.youtube.com/watch?v=-_0Uzi0lQtE
+    
+-----------------------------------------------------------------------------------
+https://cwiki.apache.org/confluence/display/ZOOKEEPER/ZooKeeper+SSL+User+Guide    
+
+trustStore 
+    trustStore is used by TrustManager
+    trustStore stores public key or certificates from CA (Certificate Authorities) which is used to trust remote party or SSL connection.
+
+keyStore 
+    is to provide credential
+    keyStore in Java stores private 
+    keyStore is used by KeyManager
+    keyStore contains private keys and required only if you are running a Server in SSL mode
+
+    keytool -genkeypair     to generate a public/private key pair and create the keystore.
+        $ keytool -genkeypair -keystore node1.keystore -alias node1 -dname "CN=node1.example.com,O=Hadoop" -keyalg RSA  -keysize 2048 -storepass changeme -keypass changeme
+    keytool -certreq        to create the CSR.
+    keytool -importcert     to import the signed certificate into the keystore.
+
+https://docs.oracle.com/cd/E19509-01/820-3503/6nf1il6er/
+https://unix.stackexchange.com/questions/347116/how-to-create-keystore-and-truststore-using-self-signed-certificate
+https://www.cloudera.com/documentation/enterprise/5-8-x/topics/cm_sg_create_deploy_certs.html#xd_583c10bfdbd326ba--6eed2fb8-14349d04bee--7723
+https://stackoverflow.com/questions/2200176/keytool-create-a-trusted-self-signed-certificate
+generating a keystore and truststore openssl
+
+
+
+
+https://www.reddit.com/user/IAm-Dragon
+https://www.reddit.com/r/trees/comments/6uf789/need_advice_parents_found_my_weed_please_read_and/
+
+https://www.cloudera.com/documentation/enterprise/5-7-x/topics/cm_sg_create_deploy_certs.html#xd_583c10bfdbd326ba--6eed2fb8-14349d04bee--7723
+    For CA:
+    keytool -genkeypair -keystore zkdmc1.keystore -alias zkdmc1 -dname "CN=zkdmc1" -keyalg RSA  -keysize 2048 -storepass changeme -keypass changeme
+    For Self Signed
+    keytool -genkeypair -keystore zkdmc1.keystore -alias zkdmc1 -dname "CN=zkdmc1" -keyalg RSA                -storepass changeme -keypass changeme -validity 356
+    keytool -genkeypair -keystore zkdmc2.keystore -alias zkdmc2 -dname "CN=zkdmc2" -keyalg RSA                -storepass changeme -keypass changeme -validity 356
+    keytool -genkeypair -keystore zkdmc3.keystore -alias zkdmc3 -dname "CN=zkdmc3" -keyalg RSA                -storepass changeme -keypass changeme -validity 356
+    
+    keytool -list -keystore /home/hadoop/zkdmc1.keystore -v 
+    On the server side:
+    keytool -keystore /home/hadoop/zkdmc1.keystore -alias zkdmc1 -export -file zkdmc1.cert
+        zkdmc1.cert
+    keytool -keystore /home/hadoop/zkdmc2.truststore -alias zkdmc2 -import -file zkdmc1.cert -storepass changeme 
+    keytool -keystore /home/hadoop/zkdmc1.truststore -alias zkdmc1 -import -file zkdmc1.cert -storepass changeme 
+    
+export CLIENT_JVMFLAGS="-Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty  -Dzookeeper.client.secure=true  -Dzookeeper.ssl.keyStore.location=/home/hadoop/zkdmc1.keystore -Dzookeeper.ssl.keyStore.password=changeme  -Dzookeeper.ssl.trustStore.location=/home/hadoop/zkdmc1.truststore -Dzookeeper.ssl.trustStore.password=changeme"    

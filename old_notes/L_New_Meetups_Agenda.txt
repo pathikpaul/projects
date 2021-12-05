@@ -1,0 +1,134 @@
+Our Agenda
+	- Meet with people from different backgrouds
+	- Generate leads so that we can provide solutions to medium sized businesses
+
+Pre Requisites
+	- Screen
+	- Projector
+
+General Meetup Agenda
+	- Who are we 
+	- Give people a basic overview of the topic
+	- Dive a bit Deeper into the topic
+	- Present a Hands on Demo for people to learn 
+
+1	Tuesday, August 22, 2017
+		https://www.safaribooksonline.com/library/view/learning-path-big/9781787280809/
+		https://www.coursera.org/specializations/big-data?utm_source=gg&utm_medium=sem&campaignid=313639387&adgroupid=23872787467&device=c&keyword=online%20courses%20on%20big%20data&matchtype=b&network=g&devicemodel=&adpostion=1t3&creativeid=203584714509&hide_mobile_promo&gclid=EAIaIQobChMIr4_k2pXE1QIVhgFpCh043w6cEAAYAyAAEgIBcPD_BwE
+		Hadoop 
+		Basic Commands
+		Example
+2	Tuesday, September 5, 2017
+		https://www.safaribooksonline.com/library/view/learning-path-big/9781787280809/
+		Spark
+		Basic Idea
+		Example
+3	Tuesday, September 19, 2017
+		Spark Stream Analytics
+		Spark Streaming Example
+		Spark Machine Learing Example
+4	Tuesday, October 3, 2017
+		No SQL , Mongo DB,
+		Examples
+		Survey of new emerging database and storage systems for Big Data
+		Tradeoffs between reduced consistency, performance, and availability
+		Understanding how to rethink the design of database systems can lead to order of magnitude performance improvements
+5	Tuesday, October 17, 2017
+		Big Data in the cloud
+			- Examples
+			- Screen shots 
+6	Tuesday, October 31, 2017
+		Data Lakes
+		Zaloni
+7	Tuesday, November 14, 2017
+		Predictive Analytics
+		Machine Learing
+		Machine Learning Tools 
+			? Computaonal capabilies of the latest advances in machine learning
+			? Advanced machine learning algorithms and techniques for applicaon to large data sets
+8	Tuesday, November 28, 2017
+		Deep Learning 
+		https://cognitiveclass.ai/courses/introduction-deep-learning/
+		https://cognitiveclass.ai/courses/deep-learning-tensorflow/
+9	Tuesday, December 12, 2017
+		Kafka 
+		Example 
+10	Tuesday, December 26, 2017
+		Dockers & Containerization
+11	Tuesday, January 9, 2018
+		Mesos and Containerization
+12	Tuesday, January 23, 2018
+		Hbase with Examples
+13	Tuesday, February 6, 2018
+		https://canvas.harvard.edu/courses/33864/assignments/syllabus
+		Cryptography / Public Key Cryptography
+			? A quick overview of basic public-key cryptography, 
+			? A brief intro to digital signatures, cerficates, Secret Sharing, Distributed Trust (Shafi Goldwasser)
+			? How to achieve mul-party secure computaion
+			? Solving the all or nothing paradigm of encrypon
+				- how do we keep data secure, while allowing computations
+14	Tuesday, February 20, 2018
+		https://canvas.harvard.edu/courses/33864/assignments/syllabus
+		Internet of things
+		IoT and the Connected World 
+			? What is IoT?
+			? How to think about IoT?
+		The Architecture of IoT 
+			? RFID Story
+			? Opportunies for IoT
+			? Some interesng IoT projects
+			? Architecture of IoT
+		The Web of Things 
+			? Linked data- value is greatest when linked
+			? Enterprise data – shared v. public v. private
+			? Importance of security, privacy and authencity
+			? Standards
+			? Web of Things layer – driver for IOT systems
+		Lessons from the Internet 
+			? Is the Internet the right technology to hook together a network of things?
+			? The key lessons that our experience with the Internet teaches us about a future of things.
+			? A focus on network management, security, mobility and longevity.
+			? The desirable features of a distributed architecture for a system of things.
+15	Tuesday, March 6, 2018
+		Scala Programming Language Overview 
+16	Tuesday, March 20, 2018
+		Scoop Hive Impala Pig
+17	Tuesday, April 3, 2018
+		Elastic Search and Kibana
+18	Tuesday, April 17, 2018
+		NLP
+		https://www.quora.com/What-is-the-learning-path-of-big-data
+19	Tuesday, May 1, 2018
+		http://info.nycdatascience.com/become-a-data-scientist-in-12-week-nyc-data-science-bootcamp
+		Data Analytics & Visualization with R
+		Dive deep into R to advanced packages and data visualization (e.g. tidyr, dplyr, string manipulation, ggplot2, R Shiny). 
+		Create a data-centric application with interactive visualizations.
+20	Tuesday, May 15, 2018
+		Data Analytics & Visualization with Python
+		Linear Regression and Machine Learning Intro
+		Basic Python programming, followed by versatile packages such as Numpy, Scipy, Matplotlib, Pandas, and Beautifulsoup. 
+		Exposure to NoSQL and MongoDB. Complete a Python web scraping project.
+21	Tuesday, May 29, 2018
+		R Machine Learning
+		Descriptive statistics, hypothesis testing, missingness, imputation & KNN, simple linear regression, 
+			multiple linear regression, generalized linear models, PCA, ridge/lasso, trees, random forests, 
+			bagging, boosting, support vector machines, neural networks, time series analysis, unsupervised learning. 
+			Complete a Kaggle competition.
+22	Tuesday, June 12, 2018
+		- Deep Learning in more detail
+23	Tuesday, June 26, 2018
+		- Machine Learning in more detail
+24	Tuesday, July 10, 2018
+		- https://www.analyticsvidhya.com/blog/2015/07/learning-path-machine-learning/
+
+25	Tuesday, July 24, 2018
+		https://www.analyticsvidhya.com/blog/2017/03/big-data-learning-path-for-all-engineers-and-data-scientists-out-there/
+
+26	Tuesday, August 7, 2018
+		https://www.lynda.com/Data-Science-tutorials/Blockchain-Basics/574704-2.html
+		Block Chain Basics
+
+
+Other Topics
+	- Neo4J
+	- Hadoop 3.0

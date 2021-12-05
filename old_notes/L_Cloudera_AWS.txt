@@ -1,0 +1,33 @@
+http://www.cloudera.com/documentation/manager/5-1-x/Cloudera-Manager-Installation-Guide/cm5ig_install_on_ec2.html
+
+
+http://www.cloudera.com/documentation/manager/5-1-x/Cloudera-Manager-Installation-Guide/cm5ig_cm_requirements.html#cmig_topic_4
+Requirements
+	RAM - 4 GB is appropriate for most cases,
+	General purpose > m1.large instances
+
+
+aws A/C pathikpaul@gmail.com
+
+AWS->EC2->Security Groups -> Create Security Group
+	As per instructions
+
+General purpose > m1.large instances ( m4.large/2 Vcpu / 8Gb)
+
+
+Used Putty Keygen -> pem to ppk
+
+=================
+ec2-user@ec2-52-91-42-215.compute-1.amazonaws.com
+
+sudo yum install wget
+wget http://archive.cloudera.com/cm5/installer/latest/cloudera-manager-installer.bin
+sudo su
+vi /etc/sysconfig/selinux
+	SELINUX=disabled
+	init 6
+http://ec2-52-91-42-215.compute-1.amazonaws.com:7180/
+	admin/admin
+
+Installed
+connected to hdfs

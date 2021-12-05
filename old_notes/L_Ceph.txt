@@ -1,0 +1,8 @@
+Learning Ceph Karan Singh
+
+https://alanxelsys.com/2016/05/04/a-hands-on-guide-to-ceph/
+https://github.com/carmstrong/multinode-ceph-vagrant
+http://docs.ceph.com/docs/master/start/intro/
+
+https://www.slideshare.net/tommylee98229/tutorial-ceph2
+	http://storageconference.us/2014/Presentations/Tutorial-CEPH.pdf

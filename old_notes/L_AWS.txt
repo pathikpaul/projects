@@ -1,0 +1,142 @@
+
+----------------------------------------------------------------------------------------------------------------------
+-- Notes -------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+Videos 	https://www.youtube.com/user/AWSwebinars/videos
+	pathikpaul@gmail.com
+
+https://calculator.s3.amazonaws.com/index.html
+https://aws.amazon.com/ec2/pricing/on-demand/
+	Virginia        CPU   MEM
+	t2.small	1	2	$0.023 per Hour
+*	t2.medium	2	4	$0.047 per Hour ( acutally 0.11 per hour)
+https://aws.amazon.com/ebs/pricing/
+	* $0.10 per GB-month of provisioned storage
+	* $0.05 per GB-month of data stored ( to S3)
+	100 GB = 10$ per month
+https://aws.amazon.com/s3/pricing/
+	Virginia
+	First 50 TB / month	$0.023 per GB
+http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-regions-availability-zones
+	us-east-1	US East (N. Virginia)
+	us-east-2	US East (Ohio)
+
+
+Pem File 
+	- Downloaded
+	
+----------------------------------------------------------------------------------------------------------------------
+-- S3 ----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+	http://docs.aws.amazon.com/AmazonS3/latest/gsg/GetStartedWithS3.html
+	https://console.aws.amazon.com/s3/
+	http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonS3.html
+	http://docs.aws.amazon.com/cli/latest/userguide/awscli-install-linux.html
+		curl -O https://bootstrap.pypa.io/get-pip.py
+		python get-pip.py --user
+		export PATH=~/.local/bin:$PATH
+		~/.local/bin/pip --version
+		~/.local/bin/pip install awscli --upgrade --user
+		~/.local/bin/aws --version
+	https://console.aws.amazon.com/iam/home
+		* Create user with full access to S3
+		aws configure
+			User			pathikpauls3
+			Access key ID		AKIAI5VJYUHIGLRHRTWQ
+			Secret access key	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
+		Instance to S3
+	[ec2-user ~]$ aws s3 cp /home/hadoop/hadoop-2.6.5.tar.gz s3://pathik-bucket-001/folder_hadoop/hadoop-2.6.5.tar.gz
+		S3 to Instance
+	[ec2-user ~]$ aws s3 cp s3://pathik-bucket-001/folder_hadoop/hadoop-2.6.5.tar.gz  hadoop-2.6.5.tar.gz
+----------------------------------------------------------------------------------------------------------------------
+-- Putty -------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+=== 
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html
+Launch Instances 
+Connect to Instances
+	ec2-user@ec2-54-209-206-87.compute-1.amazonaws.com
+	ec2-user@ec2-54-209-58-88.compute-1.amazonaws.com
+	ec2-user@ec2-54-162-199-32.compute-1.amazonaws.com
+Port
+	22
+====================== Machine to Machine SSSH =====
+10:30am
+
+ec2-52-91-243-176.compute-1.amazonaws.com
+
+copy pem file to aws using (ec2-user)
+
+sudo vi   /etc/ssh/sshd_config
+	PasswordAuthentication yes
+sudo service sshd restart
+
+ssh-keygen -t rsa
+ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@ec2-54-243-4-67.compute-1.amazonaws.com
+ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@ec2-54-174-112-112.compute-1.amazonaws.com
+=========================================================
+sudo  yum install wget
+
+----------------------------------------------------------------------------------------------------------------------
+-- S3 & Spark --------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+Below worked on t2.micro
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-shell
+	scala> val counts = sc.textFile("/etc/passwd").flatMap(l=>l.split(" ")).map(l=> (l,1)).reduceByKey(_+_)
+	scala> counts.saveAsTextFile("/home/hadoop/sparkout")
+	scala> exit
+	find /home/hadoop/sparkout
+	rm -rf /home/hadoop/sparkout
+	
+Below worked on t2.micro	
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master local --class org.apache.spark.examples.SparkPi   /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar
+	Pi is roughly 3.141035705178526
+
+Created (form /etc/passwd)
+ s3://pathik-bucket-001/folder_spark/passwd
+scala>
+sc.hadoopConfiguration.set("fs.s3a.access.key", "AKIAI5VJYUHIGLRHRTWQ")
+sc.hadoopConfiguration.set("fs.s3a.secret.key", "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")
+val counts = sc.textFile("s3a://pathik-bucket-001/folder_spark/passwd").flatMap(l=>l.split(" ")).map(l=> (l,1)).reduceByKey(_+_).coalesce(3,true).cache()
+counts.count()
+counts.saveAsTextFile("/home/hadoop/sparkout")
+counts.saveAsTextFile("s3a://pathik-bucket-001/output")
+*** Very very slow if not using coalesce ***
+
+
+wget http://search.maven.org/remotecontent?filepath=com/amazonaws/aws-java-sdk/1.7.4/aws-java-sdk-1.7.4.jar
+wget http://central.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.6.0/hadoop-aws-2.6.0.jar
+/home/hadoop/aws-java-sdk-1.7.4.jar:/home/hadoop/hadoop-aws-2.6.0.jar
+
+"spark-env.sh"
+export SPARK_CLASSPATH=/home/hadoop/aws-java-sdk-1.7.4.jar:/home/hadoop/hadoop-aws-2.6.0.jar
+/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-shell
+	O/P
+		WARN SparkConf: Setting 'spark.executor.extraClassPath' to '/home/hadoop/aws-java-sdk-1.7.4.jar:/home/hadoop/hadoop-aws-2.6.0.jar' 
+		WARN SparkConf: Setting 'spark.driver.extraClassPath'   to '/home/hadoop/aws-java-sdk-1.7.4.jar:/home/hadoop/hadoop-aws-2.6.0.jar' 
+
+curl -w "\n" http://169.254.169.254/latest/meta-data/
+curl -w "\n" http://169.254.169.254/latest/meta-data/security-groups
+curl -w "\n" http://169.254.169.254/latest/meta-data/ami-id
+curl -w "\n" http://169.254.169.254/latest/meta-data/hostname
+curl -w "\n" http://169.254.169.254/latest/meta-data/instance-id
+curl -w "\n" http://169.254.169.254/latest/meta-data/instance-type		
+curl -w "\n" http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
+----------------------------------------------------------------------------------------------------------------------
+-- EC2 Windows -------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+Instance Type->Get Windows Password
+    Provide the PEM File you downloaded earlier
+    Cick "Decrypt Password"
+You can connect remotely using this information:
+    Public DNS	ec2-34-212-189-181.us-west-2.compute.amazonaws.com
+    User name	Administrator
+    Password	czId*$@wnQDr$L;mu)2!WwhXKnHf;VmR
+use "Remote Desktop Connection"
+    Computer:
+    User name:
+You are IN
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------

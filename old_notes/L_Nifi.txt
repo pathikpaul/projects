@@ -1,0 +1,70 @@
+https://nifi.apache.org/docs/nifi-docs/html/getting-started.html
+
+To DO:
+http://davidssysadminnotes.blogspot.com/2016/02/installing-apache-nifi.html
+https://kisstechdocs.wordpress.com/2015/02/10/apache-nifi-video-tutorials/
+	- Too slow 
+http://www.nifi.rocks/getting-started-with-apache-nifi/#building-dataflow
+	- does not work 
+http://www.dataflowdeveloper.com/2016/09/21/apache-nifi-tutorials/
+	- advanced
+
+Download and Install Java
+	sudo yum install -y java-1.8.0-openjdk-devel
+
+http://nifi.apache.org/download.html
+	nifi-1.2.0-bin.tar.gz
+
+cd /user/hadooop
+tar -xvf nifi-1.2.0-bin.tar.gz
+/home/hadoop/nifi-1.2.0/bin/nifi.sh start
+
+http://192.168.77.13:8080/nifi
+
+
+Vagrant.configure("2") do |config|
+##  config.vm.box = "bento/centos-7.2"
+    config.vm.define "machine4" do |machine4| 
+        machine4.vm.box = "bento/centos-7.2"
+        machine4.vm.network "private_network", ip:"192.168.77.13"
+        machine4.vm.hostname = "machine4"
+        machine4.vm.provider :virtualbox do |vb|
+           vb.name = "machine4"
+		   vb.memory = 4096
+		   vb.cpus = 2
+        end
+    end    
+
+    config.vm.define "machine5" do |machine5| 
+        machine5.vm.box = "bento/centos-7.2"
+        machine5.vm.network "private_network", ip:"192.168.77.14"
+        machine5.vm.hostname = "machine5"
+        machine5.vm.provider :virtualbox do |vb|
+           vb.name = "machine5"
+		   vb.memory = 4096
+		   vb.cpus = 2
+        end
+    end    
+
+end
+
+
+Example from 
+	https://www.youtube.com/watch?v=ou2JWhPvWps
+	Lesson 4: Creating a Data Flow (Part 1)
+	Copy Files using NiFi
+		GetFile
+			Input Directory
+		
+		UpdateAttribute
+			filename	${filename}_${now():format('yyyy_MM_dd_HH_mm_ss')}
+		PutFile 
+			Directory
+		LogAttribute 
+			
+===================================================================================
+NI FI HI
+https://nifi.apache.org/docs/nifi-docs/html/administration-guide.html#clustering
+
+
+

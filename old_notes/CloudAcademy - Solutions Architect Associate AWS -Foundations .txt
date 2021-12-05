@@ -1,0 +1,137 @@
+LEARNING PATHS
+AWS Certified Solutions Architect - architecture training
+    8 Video Courses
+    5 Quiz Sessions
+    18 Hands-On Labs
+    30h 18m
+
+==
+Labs: https://cloudacademy.com/labs/
+==
+Specifically designed to prepare you for the AWS certification, the Cloud Academy Certified Solutions Architect learning path has helped thousands of students master the AWS Solution Architect Associate certification. Built around the domains of the exam blueprint this learning path includes over 30 hours of interactive content 8 video courses and 18 hands on labs carefully blended with summary check points, chalk talks, cue cards, exam tips. This learning path contains over 5 quiz sessions plus a final exam readiness assessment to help get you prepared for sitting the certification exam. 
+
+AWS Foundations: Compute, storage, and services. Learn the core AWS compute, storage, and service offerings you need to be familiar with for the AWS Solutions Architect–Associate exam
+
+Domain one: Designing highly available, cost efficient, fault tolerant, scalable systems. Teaches you to recognize and explain the core architecture principles of high availability, fault tolerance, and cost optimization. We then step through the core AWS components that can enable highly available solutions when used together so you can recognize and explain how to design and monitor highly available, cost efficient, fault tolerant, scalable systems.
+
+Domain two: Implementation/deployment. Learn to apply the design principles, components, and services we learned in the previous courses in this learning path to design and build a highly available, scalable application. We then apply our optimization principles to identify ways to increase durability and cost efficiency to ensure the best possible solution for the end customer.
+
+Domain three: Data security: learn to recognize and explain platform compliance for AWS, and be able to both recognize and implement secure procedures for optimum cloud deployment and maintenance, including understanding the shared responsibility security model, and knowing what that looks like in practice.
+
+Exam preparation: Exam primer, study session, test session. A final exam primer, exam tips and readiness assessment to help get you prepared for sitting the certification exam. Once you have completed the courses, labs, and quizzes, take the 30-minute primer at the end and download the flash cards to help you prepare for sitting the exam. 
+
+With this learning path, you will have everything you need to learn, build, and test your knowledge so you'll be ready to demonstrate that you can effectively design and manage application infrastructure using Amazon Web Services. Once you have completed the courses, labs, and quizzes, take the 30-minute primer at the end of the learning path to help you prepare for sitting the exam. 
+===========    
+
+UDP = Stateless
+
+Data at rest
+    Amazon EBS
+    Amazon S3
+    Amazon RDS
+Scaling Up
+    New Instance type
+Horizontal Scaling
+    Adding more instances
+    
+Amazon Cloud Front
+
+Asynchronous
+    Amazon simple quue service
+    Amazon simple notification service
+    
+Restful API
+WAF = Web Application Firewall 
+OSI = Open Systems Interconnection Model
+NAT = Network Address Translation
+BGP = Border Gateway Protocol
+
+-------------------------------- 
+EC2
+-------------------------------- 
+* Copy Images
+On Demand V/S Reserved
+Storage 
+    Persistent (EBS) or Ephemeral 
+
+-------------------------------- 
+Amazon Virtual Private Cloud :: Default VPC and Default Subnets
+-------------------------------- 
+https://aws.amazon.com/vpc/pricing
+http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html
+Create a VPC with a size /16 IPv4 CIDR block (172.31.0.0/16). This provides up to 65,536 private IPv4 addresses.
+Create a size /20 default subnet in each Availability Zone. This provides up to 4,096 addresses per subnet, a few of which are reserved for our use.
+
+https://cloudacademy.com/amazon-web-services/labs/introduction-virtual-private-cloud-vpc-9/
+Your VPC->Create VPS
+    Name tag: cloudacademy-labs
+    CIDR block: 10.0.0.0/16
+    Tenancy: default
+New subnet for your  VPC using the AWS Management Console
+    Click the Subnets link in the sidebar menu
+    Click on the Create Subnet 
+    Name tag: Public-A
+    VPC: cloudacademy-labs. 
+    Availability Zone: us-west2a
+    CIDR block: 10.0.0.0/24 
+Create a VPC Internet Gateway
+     Create Internet Gateway (click)
+     Select the Internet gateway that you just created, and then click Attach to VPC
+Connect the Internet Gateway to the VPC Route Table
+Create an EC2 instance
+Allocate and Associate an Elastic IP
+    Elastic IP  52.38.34.187
+    Click Associate Address (from Menu)
+        Associate with: instance
+        Instance:  ca-labs
+Terminate an EC2 instance
+
+-------------------------------- 
+Elastic Load Balancing  ELB and Auto Scaling
+-------------------------------- 
+Classic Load Balancer  (Internal V/S External)
+- External Over two availability zones
+- HTTPS:
+    http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-create-https-ssl-load-balancer.html
+    
+- Define LB
+- Security Group
+- Configure Security Settings
+- Configure Health Checks
+- Add EC2 instances
+- Add Tags
+
+Do Labs
+    Creating your first elastic load balancer, 
+        https://cloudacademy.com/amazon-web-services/labs/create-your-first-amazon-elastic-load-balancing-elb-4/fstart/
+        Classic Load Balancer.
+            WebServerA (us-west-2a)(subnet)
+            WebServerB (us-west-2b)(subnet)
+            Web-App-SG (Security Group)(allowing HTTP access from port 80 to anywhere (0.0.0.0/0))
+            Creat the Classic Load Balancer 
+            Find the public DNS (and connect to it using your browser)
+        Goal = credate ELB-SG (on top of the two availabilty groups)
+         . Each EC2 instance is running the same web application. 
+        
+    creating your first auto scaling group, 
+    https://cloudacademy.com/amazon-web-services/labs/creating-your-first-auto-scaling-group-52/
+    
+    WORKING WITH AMAZON EC2 AUTO SCALING GROUPS
+        https://cloudacademy.com/amazon-web-services/labs/working-amazon-ec2-auto-scaling-groups-5/
+        http://docs.aws.amazon.com/autoscaling/latest/userguide/WhatIsAutoScaling.html
+        Launching an auto scaling group behind a classic load balancer
+            #!/bin/bash
+            #Install and start Apache web server
+            yum install -y httpd24 php56
+            service httpd start
+            #Install CPU stress test tool
+            sudo yum install stress
+            stress -c 2 -i 1 -m 1 --vm-bytes 128M -t 5m
+            stress -c 4
+    launching an auto scaling group behind a classic load balancer
+    https://cloudacademy.com/amazon-web-services/labs/launching-auto-scaling-groups-behind-classic-load-balancer-56/
+        *** Pending ***
+-------------------------------- 
+AWS Elastic Beanstalk
+-------------------------------- 
+    

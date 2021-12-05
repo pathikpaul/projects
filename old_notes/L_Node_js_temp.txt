@@ -1,0 +1,30 @@
+"server.js"
+// Load the http module to create a http server
+var http = require('http');
+
+// Configure our HTTP server to respond with Hello Pathik to all requests.
+var server = http.createServer(function (request,response) {
+    response.writeHead(200,{"Content-Type":"text/plain"});
+    response.end("Hello Pathik ..........");
+});
+
+// Listen on port 8000
+server.listen(8080, function() {
+    console.log('Server Listening .... ');
+});
+
+
+"Dockerfile"
+FROM ubuntu:14.04
+RUN apt-get update -y
+RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
+RUN apt-get install -y node.js
+COPY server.js /
+EXPOSE 8080
+CMD [ "node", "/server.js" ]
+
+
+=============
+curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
+sudo yum install nodejs

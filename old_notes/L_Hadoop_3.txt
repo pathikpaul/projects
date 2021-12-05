@@ -1,0 +1,226 @@
+Hadoop 3 Node configuration from Scratch
+
+In this blog, we will help to setup a 3 node Hadoop cluster from the ground up. The whole process should take approximately one hour. Of course, if you encounter issues (learning opportunities) it will take you longer as you resolve the issues.
+Earlier in other sections on this Blog we have discussed how to set up a single node Hadoop. We have also learnt how to create a Linux VM from the ground up and how to clone it.
+In this page, we are going to take a different route.
+We are going to use to some different software that will help to create virtual machines on our “laptop/desktop” from scratch.
+
+Prerequisites
+-	Laptop with 16Gb of Ram 
+o	If you have 8 GB you can try the same steps by allocating lower memory to each Virtual Machine
+-	“Oracle Virtual Box” Software installed on your Desktop/Laptop
+-	“Vagrant” Software installed on your Desktop/Laptop
+-	Download Putty (to connect to your Linux machines)
+-	I used the below Vagrantfile:
+o	Vagrant.configure("2") do |config|
+o	##  config.vm.box = "bento/centos-7.2"
+o	    config.vm.define "machine1" do |machine1| 
+o	        machine1.vm.box = "bento/centos-7.2"
+o	        machine1.vm.network "private_network", ip:"192.168.77.10"
+o	        machine1.vm.hostname = "machine1"
+o	        machine1.vm.provider :virtualbox do |vb|
+o	           vb.name = "machine1"
+o			   vb.memory = 4096
+o			   vb.cpus = 2
+o	        end
+o	    end    
+o	
+o	    config.vm.define "machine2" do |machine2| 
+o	        machine2.vm.box = "bento/centos-7.2"
+o	        machine2.vm.network "private_network", ip:"192.168.77.11"
+o	        machine2.vm.hostname = "machine2"
+o	        machine2.vm.provider :virtualbox do |vb|
+o	           vb.name = "machine2"
+o			   vb.memory = 2048
+o			   vb.cpus = 1
+o	        end
+o	    end    
+o	
+o	    config.vm.define "machine3" do |machine3| 
+o	        machine3.vm.box = "bento/centos-7.2"
+o	        machine3.vm.network "private_network", ip:"192.168.77.12"
+o	        machine3.vm.hostname = "machine3"
+o	        machine3.vm.provider :virtualbox do |vb|
+o	           vb.name = "machine3"
+o			   vb.memory = 2048
+o			   vb.cpus = 1
+o	        end
+o	    end    
+o	end
+
+Bring up 3 Linux machines
+-	Tested on Windows 8.1
+-	Create a folder where you will be working and then CD to the foler
+-	Create File "Vagrantfile"
+-	cmd>
+-	cmd> cd C:\Users\pathi\work\lvagrant
+-	cmd> vagrant up
+-	That is all that is needed to bring up the 3 Fully functioning Linux Machines
+-	To connect to the machines use
+o	cmd> vagrant ssh machine1
+o	Host: 127.0.0.1
+o	Port: 2222
+o	Username: vagrant (All passwords are vagrant)
+o	:::
+-	You can now connect to the machine(s) using “Putty” using the IP and the Port Mentioned.
+-	Repeat for all the 3 machines
+-	 
+-	
+-	 
+Initial Setup to Prepare for Cluster
+-	Check that you can access the internet from all the machines
+o	ping -c1 google.com
+-	Update the "/etc/hosts" on all 3 hosts as follows:
+o	192.168.77.10 machine1
+o	192.168.77.11 machine2
+o	192.168.77.12 machine3
+-	install java
+o	sudo yum install -y java-1.8.0-openjdk-devel
+-	create hadoop account
+o	groupadd hadoop
+o	useradd hadoop -g hadoop
+o	passwd hadoop
+?	New password:
+?	Retype new password:
+-	Allow account “hadoop” to run “sudo” commands
+o	visudo  
+?	## Add below line to hadoop to run commands using sudo
+?	hadoop  ALL=(ALL)       ALL
+-	Setup SSH Keys for hadoop from machine1 to all other machines
+o	# Logout from Root and login as hadoop (su - hadoop)
+o	 [hadoop@machine1 ~]$ ssh-keygen -t rsa
+o	[hadoop@machine1 ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@machine1
+o	[hadoop@machine1 ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@machine2
+o	[hadoop@machine1 ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub hadoop@machine3
+o	[hadoop@machine1 ~]$ ssh machine2  ( Validate for all machines)
+•	[hadoop@machine2 ~]$ logout
+•	Connection to machine2 closed.
+o	[hadoop@machine1 ~]$
+-	Open Ports so that you can access the Unix Ports from the host OS (Windows)
+o	# sudo systemctl stop firewalld
+o	# sudo systemctl disable firewalld
+
+
+Download and Unzip
+o	Download hadoop-2.6.5.tar.gz 
+?	from http://hadoop.apache.org/releases.html 
+?	select “binary” for the release you want 
+?	You will get the above tar file
+o	Untar on Unix ( on all 3 machines)
+?	cd /home/hadoop
+?	tar -xvf hadoop-2.6.5.tar.gz
+
+Configure
+o	vi /home/hadoop/.bash_profile
+?	export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.131-2.b11.el7_3.x86_64/jre/
+?	export HADOOP_HOME=/home/hadoop/hadoop-2.6.5
+?	export HADOOP_MAPRED_HOME=$HADOOP_HOME
+?	export HADOOP_COMMON_HOME=$HADOOP_HOME
+?	export HADOOP_HDFS_HOME=$HADOOP_HOME
+?	export YARN_HOME=$HADOOP_HOME
+?	export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+?	export HADOOP_INSTALL=$HADOOP_HOME
+?	export PATH=$PATH:$HOME/bin:${HADOOP_HOME}:${HADOOP_HOME}/sbin:${HADOOP_HOME}/bin:
+o	 .   /home/hadoop/.bash_profile
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/hadoop-env.sh
+?	export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.131-2.b11.el7_3.x86_64/jre/
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/core-site.xml
+?	    <property>
+?	        <name>fs.defaultFS</name>
+?	        <value>hdfs://192.168.77.10:9000</value>
+?	    </property>
+?	    <property>
+?	        <name>hadoop.tmp.dir</name>
+?	        <value>/home/hadoop/data2/tmp</value>
+?	    </property>
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/hdfs-site.xml
+?	    <property>
+?	        <name>dfs.replication</name>
+?	        <value>1</value>
+?	    </property>
+?	    <property>
+?	        <name>dfs.namenode.name.dir</name>
+?	        <value>/home/hadoop/data2/name_node</value>
+?	    </property>
+?	    <property>
+?	        <name>dfs.datanode.data.dir</name>
+?	        <value>/home/hadoop/data2/data_node</value>
+?	    </property>
+?	    <property>
+?	        <name>dfs.namenode.checkpoint.dir</name>
+?	        <value>/home/hadoop/data2/sec_name_name</value>
+?	    </property>
+o	cp /home/hadoop/hadoop-2.6.5/etc/hadoop/mapred-site.xml.template /home/hadoop/hadoop-2.6.5/etc/hadoop/mapred-site.xml
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/mapred-site.xml
+?	    <property>
+?	        <name>mapreduce.framework.name</name>
+?	        <value>yarn</value>
+?	    </property>
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/yarn-site.xml			 
+?	    <property>
+?	        <name>yarn.resourcemanager.hostname</name>
+?	        <value>192.168.77.10</value>
+?	    </property>
+?	    <property>
+?	        <name>yarn.nodemanager.aux-services</name>
+?	        <value>mapreduce_shuffle</value>
+?	    </property>
+o	vi /home/hadoop/hadoop-2.6.5/etc/hadoop/slaves
+?	192.168.77.10
+?	192.168.77.11
+?	192.168.77.12
+o	End of Configuration Changes
+o	Note that the configuration changes need to be made on all the 3 machines.
+o	You can use scp to copy these files across machines since you already have “password less ssh already setup earlier”
+
+Startup
+o	hdfs namenode –format
+		You should get the message
+		Storage directory /home/hadoop/data2/name_node has been successfully formatted
+o	start-dfs.sh
+o	start-yarn.sh
+o	/home/hadoop/hadoop-2.6.5/sbin/mr-jobhistory-daemon.sh start historyserver
+
+Validate & Test 
+-	Check that all the below processes are running
+o	---- machine1 ----
+o	16016 DataNode
+o	16753 JobHistoryServer
+o	16482 NodeManager
+o	15892 NameNode
+o	16170 SecondaryNameNode
+o	16316 ResourceManager
+o	---- machine2 ----
+o	12871 DataNode
+o	12971 NodeManager
+o	---- machine3 ----
+o	12929 DataNode
+o	13029 NodeManager
+-	Check that all the Web URLs below are working
+o	Name Node             http://192.168.77.10:50070/
+o	Sec Name Node         http://192.168.77.10:50090/
+o	Resource Mgr          http://192.168.77.10:8088/   ( Check that you see all the 3 nodes)
+o	 
+o	Job History Tracker   http://192.168.77.10:19888/
+o	Data Node             http://192.168.77.10:50075/blockScannerReport
+o	Node Manager          http://192.168.77.10:8042/
+o	Data Node             http://192.168.77.11:50075/blockScannerReport
+o	Node Manager          http://192.168.77.11:8042/
+o	Data Node             http://192.168.77.12:50075/blockScannerReport
+o	Node Manager          http://192.168.77.12:8042/
+o	
+o	$ hadoop dfsadmin -report   ## check that all the 3 nodes are live
+-	Let us run a small test job
+o	$ hdfs dfs -mkdir /input
+o	$ hdfs dfs -put /home/hadoop/hadoop-2.6.5/etc/hadoop/* /input
+o	$ hadoop jar /home/hadoop/hadoop-2.6.5/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.5.jar wordcount /input /output
+o	$ hdfs dfs -ls -R /output 
+o	$ hdfs dfs -cat /output/part-r-00000 | head 
+-	Check the Resource Manager URL to find the job
+o	 
+-	Check the Job History Tracker URL to find - How many mappers were used , how many reducers were used?
+o	 
+
+You now have a 3 node cluster running using one of the latest versions of Unix “CentOS Linux release 7.2” one the latest version of Java and one of the latest versions of Hadoop. You should be able to experiment with this and extend this as needed. This simple configuration will be very useful to test out specific scenarios or for benchmarking.
+
+Author – Pathik Paul

@@ -1,0 +1,132 @@
+https://www.learnpython.org/
+
+Numpy Array
+Element-wise calculations
+--------------------------
+import numpy as np
+height = [1.87,  1.87, 1.82, 1.91, 1.90, 1.85]
+weight = [81.65, 97.52, 95.25, 92.98, 86.18, 88.45]
+np_height = np.array(height)
+np_weight = np.array(weight)
+bmi = np_weight / np_height ** 2
+print(bmi)
+
+Print out the type
+--------------------------
+print (type(height))
+
+
+Subsetting
+--------------------------
+Boolean:
+bmi>23
+bmi[bmi>25]
+
+Generators
+--------------------------
+import random
+
+def lottery():
+    for i in range(6):
+        yield random.randint(1, 40)
+    yield random.randint(100,150)
+    yield random.randint(100,150)
+    yield random.randint(100,150)
+
+for random_number in lottery():
+       print("Nxt num... %d!" %(random_number))
+
+Functions
+--------------------------
+def fib( a,b):
+   return a+b
+
+def fibseries():
+    a, b = 1, 1
+    while 1:
+        yield (a)
+        f = a+b
+        a = b
+        b = f
+
+def fibseries():
+    a, b = 1, 1
+    while 1:
+        yield a
+        a, b = b, a + b
+
+counter = 0;        
+for fibn in fibseries():
+       print("Nxt num... %d!" %(fibn))
+       counter += 1;
+       if counter >= 10:
+           break
+
+List Comprehensions (filtering)
+--------------------------
+numbers = [34.6, -203.4, 44.9, 68.3, -12.2, 44.6, 12.7]
+newlist = [n for n in numbers if n > 0]
+print(newlist)
+
+Multiple Function Arguments
+--------------------------
+# edit the functions prototype and implementation
+import numpy as np
+def foo(a, b, c, *extraopts):
+    print(np.array(extraopts).size)
+    return np.array(extraopts).size;
+
+def bar(a, b, c, **extraopts):
+    print(np.array(extraopts).size)
+    if extraopts.get("magicnumber") == 7:
+        return True
+    else:
+        return False
+
+def foo(a, b, c, *extraopts):
+    return len(extraopts)
+
+def bar(a, b, c, **extraopts):
+    return extraopts.get("magicnumber") == 7
+        
+
+# test code
+if foo(1,2,3,4) == 1:
+    print("Good.")
+if foo(1,2,3,4,5) == 2:
+    print("Better.")
+if bar(1,2,3,magicnumber = 6) == False:
+    print("Great.")
+if bar(1,2,3,magicnumber = 7) == True:
+    print("Awesome!")
+
+Sets
+--------------------------
+print(set("my name".split()))
+print(set("my name"))
+
+a = ["Jake", "John", "Eric"]
+b = ["John", "Jill"]
+print (set(a).union(set(b)))
+
+Json
+--------------------------
+j_str='{"name":"John","age":30,"cars":{"car1":"Ford","car2":"BMW","car3":"Fiat"}}'
+j = json.loads(j_str)
+print(json.dumps(j, indent=4))
+json.loads <== Loads to a dictionary
+
+Python Dictionary
+--------------------------
+##  no duplicate keys allowed
+j_str='{"name":"John","age":30,"cars":{"car1":"Ford","car2":"BMW","car3":"Fiat"}}'
+j = json.loads(j_str)
+j['salary']=50000    ## Add
+print(json.dumps(j, indent=4))
+print (j['cars'])    ## Print/select/read
+print (j['salary'])
+j['salary']=10000    ## Update
+j.clear()            ## Clear .. but dictionary is still there
+del j                ## Remove
+j = {"name":"John","age":30,"cars":{"car1":"Ford","car2":"BMW","car3":"Fiat"}} 
+                     ## Create a Dictionary

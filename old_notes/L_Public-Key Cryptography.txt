@@ -1,0 +1,34 @@
+
+
+Why Cryptography
+	Confidentiality
+	Data Integrity
+	Authentication
+	Non-repudiation
+
+Public Key Encryption
+	2 keys
+	Public to Ecrypt
+	Private to Decrypt 
+
+Public Key Infrastructure
+	Needed to validate the the public key
+
+
+Model of Digital Signature
+
+
+Hierarchy of CA
+	- Root CA (Verisign, Symantech)
+	- Second Level CA (issued by root CA)
+	...
+
+Browsers
+	- Have list of public keys of all root CAs
+	- 
+
+
+
+Ref:
+	https://www.tutorialspoint.com/cryptography/cryptography_quick_guide.htm
+

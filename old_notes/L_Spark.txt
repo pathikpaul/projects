@@ -1,0 +1,536 @@
+﻿==================================================================================================
+Spark on Hadoop / Yarn (3 Node)
+==================================================================================================
+
+Pre-Requisites
+-	Java 
+-	Fully operational Hadoop and Yarn (if you want to test yarn mode)
+
+
+PreReq
+	- Java ( we used openjdk version "1.8.0_131")
+	- Operational Hadoop Cluster
+	
+Download 
+	Spark 1.6.3
+	Hadoop 2.6
+	http://spark.apache.org/downloads.html
+	spark-1.6.3-bin-hadoop2.6.tgz
+
+Install Spark
+	cd /home/hadoop  (or appropriate folder)
+	tar -xvf /vagrant/spark-1.6.3-bin-hadoop2.6.tgz
+Test Spark Local Mode
+	cd /home/hadoop/spark-1.6.3-bin-hadoop2.6
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-shell
+	scala> val counts = sc.textFile("/etc/passwd").flatMap(l=>l.split(" ")).map(l=> (l,1)).reduceByKey(_+_)
+	scala> counts.saveAsTextFile("/home/hadoop/sparkout")
+	scala> exit
+	find /home/hadoop/sparkout
+	rm -rf /home/hadoop/sparkout
+	
+	or
+	
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master local --class org.apache.spark.examples.SparkPi   /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar
+	Pi is roughly 3.141035705178526
+
+Configure Spark for Yarn
+	cd /home/hadoop/spark-1.6.3-bin-hadoop2.6/
+	cp conf/spark-env.sh.template conf/spark-env.sh
+	vi conf/spark-env.sh
+	export HADOOP_CONF_DIR=/home/hadoop/hadoop-2.6.5/etc/hadoop
+	Copy to All nodes of the cluster
+
+Test Spark on Yarn	
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster  --class org.apache.spark.examples.SparkPi   /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar
+	Yarn Logs are not displayed directly you will find them in the Resource Manager->logs for the job (http://192.168.77.10:8088/)
+	
+	yarn-client
+		** Output should be displayed
+	
+/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class TeraGen  /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar 10240000 /teragen-1
+	com/github/ehiggs/spark/terasort/TeraGen
+
+
+
+
+==================================================================================================
+The next step is to tell Spark where Mesos and the tgz on http live. 
+==================================================================================================
+cd /home/hadoop/spark-1.6.3-bin-hadoop2.6/conf
+	cp spark-env.sh.template spark-env.sh 
+	vi spark-env.sh
+	export MESOS_NATIVE_JAVA_LIBRARY=/usr/local/lib/libmesos.so
+	export SPARK_EXECUTOR_URI=http://192.168.77.10:9914/spark-1.6.3-bin-hadoop2.6.tgz
+
+-- Webserver: 
+cd /home/hadoop
+tar -czvf spark-1.6.3-bin-hadoop2.6.tgz spark-1.6.3-bin-hadoop2.6
+python -m SimpleHTTPServer 9914
+
+---
+bin/spark-shell --master mesos://192.168.77.10:5050
+bin/spark-submit --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar
+bin/spark-submit --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar 1000
+bin/spark-submit --num-executors 5 --driver-memory 1g --executor-memory 1g  --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar 
+
+==================================================================================================
+Compile a Spark Scala Small Program Using SBT
+==================================================================================================
+
+Simple Word Count Read and Write from HDFS
+wordcount.scala
+import org.apache.spark._
+object wordcount extends App{
+       val conf = new org.apache.spark.SparkConf().setAppName("Word Count")
+       val sc = new org.apache.spark.SparkContext(conf)
+	val textFile = sc.textFile("/input")
+	val counts = textFile.flatMap(line => line.split(" ")).map(word => (word, 1)).reduceByKey(_ + _)
+	counts.saveAsTextFile("/tmp/sparkout")
+}
+
+
+Read from Local Disk (on Driver using Scala and Write to HDFS)
+
+import org.apache.spark._
+import java.io._
+object Person extends App {
+def getListOfSubDirectories(directoryName: String): Array[String] = { (new File(directoryName)).listFiles.filter(_.isDirectory).map(_.getName) }
+ val sc = new SparkContext
+ sc.parallelize(getListOfSubDirectories("/")).foreach(println(_))
+ sc.parallelize(getListOfSubDirectories("/")).saveAsTextFile("/tmp/sparkout")
+}
+
+
+Ref: http://www.infoobjects.com/spark-submit-with-sbt/
+Ref: http://www.scala-sbt.org/release/docs/Installing-sbt-on-Linux.html
+
+curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+sudo yum install sbt
+
+$ cat ./src/main/scala/Person.scala
+
+$ cat build.sbt
+name := "Sample"
+version := "1.0"
+scalaVersion := "2.10.5"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.3"
+$
+
+
+bin/spark-submit --class Person --master local /home/hadoop/people/target/scala-2.10/sample_2.10-1.0.jar
+
+==================================================================================================
+Compile a Spark Scala Small Program Using Maven
+==================================================================================================
+http://mirror.jax.hugeserver.com/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+/home/hadoop/apache-maven-3.5.0/bin/mvn clean compile package
+/home/hadoop/target/wordcount-1.0.jar
+
+/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --class WordCount --master local /home/hadoop/target/wordcount-1.0.jar
+
+Ref: http://stackoverflow.com/questions/19687821/maven-compile-replies-no-sources-to-compile-for-scala-project
+
+$ cat pom.xml
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.mycompany.app</groupId>
+    <artifactId>my-app</artifactId>
+    <version>1.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId><version>2.1.0</version>
+        </dependency>
+    </dependencies>
+<build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+        <plugin>
+            <groupId>org.scala-tools</groupId>
+            <artifactId>maven-scala-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+
+</project>
+
+==================================================================================================
+Spark and TeraSort Benchmark
+==================================================================================================
+Ref
+	https://github.com/ehiggs/spark-terasort
+Download GIT
+	sudo yum install git
+
+Download Maven
+	https://maven.apache.org/download.cgi
+	Binary tar.gz archive	apache-maven-3.5.0-bin.tar.gz
+	cd /home/hadoop
+	tar -xvf apache-maven-3.5.0-bin.tar.gz
+	/home/hadoop/apache-maven-3.5.0/bin/mvn -version
+Compile
+	cd /home/hadoop/work 
+	git clone https://github.com/ehiggs/spark-terasort.git
+	cd /home/hadoop/work/spark-terasort
+	vi pom.xml
+		<scala.version>2.10.5</scala.version>
+		<scala.binary.version>2.10</scala.binary.version>
+		<spark.version>1.6.3</spark.version>
+	/home/hadoop/apache-maven-3.5.0/bin/mvn clean compile package
+	/home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar
+
+Create TeraSort File	
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class com.github.ehiggs.spark.terasort.TeraGen /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar 1g /teragen-1g
+	$ hdfs dfs -du -s -h /teragen-1g
+		953.7 M  /teragen-1g
+	/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class com.github.ehiggs.spark.terasort.TeraSort /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar /teragen-1g /terasort-1g
+		real    5m27.255s
+
+	10g
+	time /home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class com.github.ehiggs.spark.terasort.TeraGen  /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar 10g /teragen-10g
+		real    11m27.348s
+	time hdfs dfs -du -s -h /teragen-10g /terasort-10g
+
+	time /home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class com.github.ehiggs.spark.terasort.TeraSort /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar     /teragen-10g /terasort-10g
+		real    36m24.624s
+	time hdfs dfs -du -s -h /teragen-10g /terasort-10g
+		9.3 G  /teragen-10g
+		du: `/terasort-10g': No such file or directory
+		real    0m17.718s
+	time /home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --master yarn-cluster --class com.github.ehiggs.spark.terasort.TeraValidate /home/hadoop/work/spark-terasort/target/spark-terasort-1.1-SNAPSHOT.jar /terasort-10g /teravalidate-10g
+		real    10m28.568s
+==================================================================================================
+Spark Date and Time
+==================================================================================================
+val format = new java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
+val date_str = format.format(new java.util.Date())
+==================================================================================================
+Spark SQL and Hive and Parquet
+==================================================================================================
+	We will begin with a Cloudera VM to simplify the installation complexities
+	cloudera-quickstart-vm-5.8.0-0-virtualbox.zip
+	Use Spark SQL and Hive to do the below:
+		- Insert / Update / Delete / Select 
+
+		- 
+Ref: https://www.tutorialspoint.com/spark_sql/spark_sql_quick_guide.htm
+Ref: https://gist.githubusercontent.com/rominirani/8235702/raw/a50f7c449c41b6dc8eb87d8d393eeff62121b392/employees.json
+
+employee.json
+   {"id" : "1201", "name" : "satish", "age" : "25"}
+   {"id" : "1202", "name" : "krishna", "age" : "28"}
+   {"id" : "1203", "name" : "amith", "age" : "39"}
+   {"id" : "1204", "name" : "javed", "age" : "23"}
+   {"id" : "1205", "name" : "prudvi", "age" : "23"}
+
+hdfs dfs -mkdir /user/pathik
+hdfs dfs -put employee.json /user/pathik
+spark-shell>
+
+scala> val dfs = sqlContext.read.json("/user/pathik/employee.json")
+scala> dfs.show()
+
+dfs.write.parquet("/user/pathik/in"+date_str+"employee.parquet")
+
+-rw-r--r--   1 cloudera supergroup        755 2017-06-10 16:20 /user/pathik/in2017-06-10-16-10-28employee.parquet/part-r-00000-a306e606-12a8-4a71-821f-7dd969d882f4.gz.parquet
+-rw-r--r--   1 cloudera supergroup        772 2017-06-10 16:20 /user/pathik/in2017-06-10-16-10-28employee.parquet/part-r-00001-a306e606-12a8-4a71-821f-7dd969d882f4.gz.parquet
+
+val dfs1 = sqlContext.read.parquet("/user/pathik/in"+date_str+"employee.parquet")
+
+scala> dfs1.registerTempTable("employee")
+scala> dfs1.show()
+sqlContext.sql("SELECT * FROM employee").show()
+sqlContext.sql("SELECT * FROM employee").collect.foreach(println)
+nameAndAddress.collect.foreach(println)
+....................................................................................
+Hive 
+....................................................................................
+create external table hive_emp_2 (col1 string, col2 string) location '/user/pathik/hive_emp_2';
+create external table hive_emp (col1 string, col2 string) location '/user/pathik/hive_emp';
+describe hive_emp;
+describe formatted hive_emp;
+select count(*) from hive_emp;
+
+*** Note : Field Separator is Control A****
+*** Note : Field Separator is Control A****
+cat /home/cloudera/work/1.txt
+pathik*paul
+ashok*sharma
+imon*paul
+ella*paul
+$
+
+LOAD DATA LOCAL INPATH '/home/cloudera/work/1.txt' OVERWRITE INTO TABLE hive_emp;
+select * from hive_emp;
+INSERT INTO TABLE hive_emp VALUES ('James','Smith'), ('Jane','Doe');
+LOAD DATA LOCAL INPATH '/home/cloudera/work/1.txt' INTO TABLE hive_emp;
+select * from hive_emp;
+
+Hive Partitions
+
+create external table hive_emp_p (fname string, lname string) partitioned by (yearofbirth int) location '/user/pathik/hive_emp_p';
+INSERT INTO TABLE hive_emp_p PARTITION (yearofbirth = '2000') VALUES ('James','Smith'), ('Jane','Doe');
+INSERT INTO TABLE hive_emp_p PARTITION (yearofbirth = '1900') VALUES ('Pathik','Paul'), ('Imon','Paul');
+select * from hive_emp_p;
+show partitions hive_emp_p;
+yearofbirth=1900
+yearofbirth=2000
+truncate table hive_emp_p PARTITION (yearofbirth=1900);
+** Not supported **
+create table int_hive_emp_p (fname string, lname string) partitioned by (yearofbirth int) location '/user/pathik/int_hive_emp_p';
+INSERT INTO TABLE int_hive_emp_p PARTITION (yearofbirth = '2000') VALUES ('James','Smith'), ('Jane','Doe');
+INSERT INTO TABLE int_hive_emp_p PARTITION (yearofbirth = '1900') VALUES ('Pathik','Paul'), ('Imon','Paul');
+select * from int_hive_emp_p;
+show partitions int_hive_emp_p;
+truncate table int_hive_emp_p PARTITION (yearofbirth=1900);
+** Works
+===
+
+hdfs dfs -ls -R /user/hadoop/employee_p
+
+Hive Views
+
+CREATE VIEW hive_emp_view1 AS SELECT fname, yearofbirth from hive_emp1 where yearofbirth>=1800;
+select * from hive_emp_view1;
+
+cat /etc/passwd | sed 's/^.*:\(.*$\)/\1/' | head
+cat /etc/passwd | sed 's/^.*:\(.*\):\(.*\):\(.*$\)/\1/' | head
+cat /etc/passwd | sed 's/\(^.*\):\(.*\):\(.*\):\(.*\):\(.*\):\(.*\):\(.*$\)/\5/' | head
+
+CREATE TABLE hive_passwd (
+Username string,
+Password string,
+UID string,
+GID string,
+UserIdComment string,
+HomeDirectory string,
+DefaultShell string
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.RegexSerDe'
+WITH SERDEPROPERTIES ( "input.regex" = "(^.*):(.*):(.*):(.*):(.*):(.*):(.*$)" )
+STORED AS TEXTFILE location '/user/pathik/passwd';
+LOAD DATA LOCAL INPATH "/etc/passwd" INTO TABLE hive_passwd;
+select * from hive_passwd order by UID desc LIMIT 3;
+** Map Reduce **
+select * from hive_passwd LIMIT 3;
+..................................................................................................
+to connect to hive metastore from spark 
+cp  /usr/lib/hive/conf/hive-site.xml    /usr/lib/spark/conf/
+
+
+import org.apache.spark.sql.hive.HiveContext
+val hiveContext = new HiveContext(sc)
+val hive_emp = hiveContext.sql("select * from hive_emp")
+hive_emp.collect().foreach(println)
+hive_emp.show
+hiveContext.sql("Drop table hive_emp")
+hiveContext.sql("INSERT INTO TABLE hive_emp VALUES ('S_James','S_Smith'), ('S_Jane','S_Doe')")
+	*** Insert Not supported in Spark as in above
+	https://docs.databricks.com/spark/latest/spark-sql/language-manual/insert.html
+hiveContext.sql("create external table hive_emp (col1 string, col2 string) location '/user/hadoop/hive_emp'")
+hiveContext.sql("INSERT INTO hive_passwd2 select * from hive_passwd")
+	*** java.lang.UnsupportedOperationException: Regex SerDe doesn't support the serialize() method ***
+hiveContext.sql("INSERT INTO hive_emp_2 select * from hive_emp")
+hiveContext.sql("INSERT OVERWRITE table hive_emp_2 select * from hive_emp")
+hiveContext.sql("TRUNCATE TABLE hive_emp_2")
+	*** FAILED: SemanticException [Error 10146]: Cannot truncate non-managed table hive_emp_2 ***
+	*** Not supported by Hive 
+hiveContext.sql("truncate table int_hive_emp_p PARTITION (yearofbirth=2000)")
+	** Works
+
+==================================================================================================
+$ cat src/main/scala/wordcount.scala 
+import org.apache.spark._
+object wordcount extends App{
+       val conf = new org.apache.spark.SparkConf().setAppName("Word Count")
+       val sc = new org.apache.spark.SparkContext(conf)
+	val textFile = sc.textFile("/user/pathik/passwd")
+	val counts = textFile.flatMap(line => line.split(" ")).map(word => (word, 1)).reduceByKey(_ + _)
+	counts.saveAsTextFile("/user/pathik/sparkout")
+}
+$ mvn clean compile package
+$ spark-submit --master yarn-cluster --class wordcount /home/cloudera/work/target/my-app-1.0.jar
+==================================================================================================
+pom.xml
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId><version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_2.10</artifactId><version>1.5.0</version>
+        </dependency>
+$ cat  ./src/main/scala/wordcount.scala
+import org.apache.spark._
+import org.apache.spark.sql.hive.HiveContext
+object wordcount extends App{
+       val conf = new org.apache.spark.SparkConf().setAppName("Word Count")
+       val sc = new org.apache.spark.SparkContext(conf)
+       val hiveContext = new HiveContext(sc)
+val bb = hiveContext.sql("truncate table int_hive_emp_p PARTITION (yearofbirth=2000)")
+val aa = hiveContext.sql("select * from  int_hive_emp_p")
+  aa.collect().foreach(println)
+}
+$ mvn clean compile package
+$ spark-submit --master yarn-cluster --class wordcount /home/cloudera/work/target/my-app-1.0.jar
+==================================================================================================
+
+
+==================================================================================================
+==================================================================================================
+==================================================================================================
+==================================================================================================
+Spark and Hbase 
+==================================================================================================
+==================================================================================================
+	https://hortonworks.com/hadoop-tutorial/introduction-apache-hbase-concepts-apache-phoenix-new-backup-restore-utility-hbase/
+
+$ hbase shell
+create 'driver_dangerous_event','events'
+put 'driver_dangerous_event','4','events:driverId','78'
+put 'driver_dangerous_event','4','events:driverName','Carl'
+put 'driver_dangerous_event','4','events:eventTime','2016-09-23 03:25:03.567'
+put 'driver_dangerous_event','4','events:eventType','Normal'
+put 'driver_dangerous_event','4','events:latitudeColumn','37.484938'
+put 'driver_dangerous_event','4','events:longitudeColumn','-119.966284'
+put 'driver_dangerous_event','4','events:routeId','845'
+put 'driver_dangerous_event','4','events:routeName','Santa Clara to San Diego'
+put 'driver_dangerous_event','4','events:truckId','637'
+
+put 'driver_dangerous_event','4','events:routeName','Santa Clara to Los Angeles'
+
+get 'driver_dangerous_event','4',{COLUMN => 'events:driverName'}
+
+import org.apache.hadoop.hbase.spark.HBaseContext
+val hbaseContext = new HBaseContext(sc, config);
+
+get 'driver_dangerous_event','4'
+
+disable 'driver_dangerous_event'
+scan    'driver_dangerous_event'
+enable  'driver_dangerous_event'
+drop    'driver_dangerous_event'
+
+https://hbase.apache.org/book.html
+http://www.vidyasource.com/blog/Programming/Scala/Java/Data/Hadoop/Analytics/2014/01/25/lighting-a-spark-with-hbase
+http://dmitrypukhov.pro/work-with-hbase-from-spark-shell/
+http://start.sethanil.com/bigdata/10-spark-hbase
+
+
+http://lecluster.delaurent.com/spark-on-hbase-with-spark-shell/
+MY_H_PATH=`hbase classpath`
+bin/spark-shell --driver-class-path $MY_H_PATH
+or 
+spark-shell --master yarn-client --driver-class-path=/usr/lib/hbase/hbase-common.jar:/usr/lib/hbase/hbase-client.jar:/usr/lib/hbase/hbase-protocol.jar:/usr/lib/hbase/hbase-server.jar:/etc/hbase/conf
+import org.apache.hadoop.hbase.{HBaseConfiguration, HTableDescriptor}
+import org.apache.hadoop.hbase.client.{HBaseAdmin, Result}
+val hconf = HBaseConfiguration.create()
+val admin = new HBaseAdmin(hconf)
+admin.listTables
+val tableName="spark_table"
+val tableDesc = new HTableDescriptor(tableName)
+admin.createTable(tableDesc)
+
+
+spark-submit --master yarn-client --driver-class-path=/usr/lib/hbase/hbase-common.jar:/usr/lib/hbase/hbase-client.jar:/usr/lib/hbase/hbase-protocol.jar:/usr/lib/hbase/hbase-server.jar:/etc/hbase/conf --class wordcount /home/cloudera/work/target/scala-2.10/word-count_2.10-1.0.jar
+
+Before:
+hbase(main):002:0> list
+driver_dangerous_event                                                                                                                                                                                   
+
+After:
+hbase(main):003:0> list
+driver_dangerous_event                                                                                                                                                                                   
+spark_table                                                                                                                                                                                              
+
+$ cat wordcount.sbt 
+name := "word count"
+version := "1.0"
+scalaVersion := "2.10.4"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.5.0"
+libraryDependencies += "org.apache.hbase" % "hbase-client" % "1.0.0"
+libraryDependencies += "org.apache.hbase" % "hbase-common" % "1.0.0"
+libraryDependencies += "org.apache.hbase" % "hbase-server" % "1.0.0"
+
+resolvers ++= Seq(
+  "Apache Repository" at "https://repository.apache.org/content/repositories/releases/"
+)
+$ 
+
+$ cat src/main/scala/wordcount.scala
+import org.apache.spark._
+import org.apache.hadoop.hbase.{HBaseConfiguration, HTableDescriptor}
+import org.apache.hadoop.hbase.client.{HBaseAdmin, Result}
+object wordcount extends App{
+       val conf = new org.apache.spark.SparkConf().setAppName("Word Count")
+       val sc = new org.apache.spark.SparkContext(conf)
+       val hconf = HBaseConfiguration.create()
+       val admin = new HBaseAdmin(hconf)
+       admin.listTables
+       val tableName="spark_table"
+       val tableDesc = new HTableDescriptor(tableName)
+       admin.createTable(tableDesc)
+}
+
+-----
+$ pom.xml 
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.mycompany.app</groupId>
+    <artifactId>my-app</artifactId>
+    <version>1.0</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId> <artifactId>spark-core_2.10</artifactId><version>1.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId> <artifactId>hbase-client</artifactId><version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId> <artifactId>hbase-server</artifactId><version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId> <artifactId>hbase-common</artifactId><version>1.0.0</version>
+        </dependency>
+    </dependencies>
+<build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+        <plugin>
+            <groupId>org.scala-tools</groupId>
+            <artifactId>maven-scala-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+</project>
+
+mvn clean compile package
+/home/cloudera/work/target/my-app-1.0.jar
+spark-submit --master yarn-client --driver-class-path=/usr/lib/hbase/hbase-common.jar:/usr/lib/hbase/hbase-client.jar:/usr/lib/hbase/hbase-protocol.jar:/usr/lib/hbase/hbase-server.jar:/etc/hbase/conf --class wordcount /home/cloudera/work/target/my-app-1.0.jar
+** creates a table in hbase
+=================================================================
+import org.apache.hadoop.hbase.{HBaseConfiguration, HTableDescriptor}
+import org.apache.hadoop.hbase.client.{HBaseAdmin, Result}
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat
+val tableName = "driver_dangerous_event"
+val hconf = HBaseConfiguration.create()
+hconf.set(TableInputFormat.INPUT_TABLE, "driver_dangerous_event")
+val hBaseRDD = sc.newAPIHadoopRDD(hconf, classOf[TableInputFormat], classOf[ImmutableBytesWritable], classOf[Result])
+println("records found : " + hBaseRDD.count())
+====

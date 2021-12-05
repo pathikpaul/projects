@@ -1,0 +1,240 @@
+.......................................................................
+Create 6 Virtual Machines
+.......................................................................
+2. login as vagrant/vagrant or root/vagrant
+3. Create working user account kafka/kafka
+su - root
+groupadd kafka
+useradd kafka -g kafka	
+passwd kafka 
+cat > /vagrant/hosts <<EENNDD
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.77.10 kfdmc1
+192.168.77.11 kfdmc2
+192.168.77.12 kfdmc3
+192.168.77.13 kfdmc4
+192.168.77.14 kfdmc5
+192.168.77.15 kfdmc6
+EENNDD
+cp 	/vagrant/hosts /etc/hosts
+
+4. Update /etc/hosts
+check if you can connect from one machine to another using ssh
+	ssh kfdmc2
+check if you can connect to the internet from each host
+	ping -c1 google.com | grep --color "0% packet loss"
+5. visudo ## add line for kafka  ## kafka   ALL=(ALL)       ALL
+
+
+.......................................................................
+Kafka Pre Requisites
+.......................................................................
+Download and Install Java
+	sudo yum install -y java-1.8.0-openjdk-devel
+
+.......................................................................
+Install and setup and configure Kafka 2 Node Cluster (Sender)
+	https://kafka.apache.org/quickstart
+	http://armourbear.blogspot.com/2015/03/setting-up-multinode-kafka-cluster.html
+	https://gist.github.com/fancellu/f78e11b1808db2727d76
+.......................................................................
+loging as kafka 
+download kafka_2.11-0.11.0.0.tgz to /vagrant as /vagrant/kafka_2.11-0.11.0.0.tgz
+
+kfdmc1:
+cd /home/kafka
+tar -xvf /vagrant/kafka_2.11-0.11.0.0.tgz
+cd kafka_2.11-0.11.0.0
+
+vi config/server.properties
+	zookeeper.connect=192.168.77.10:2181
+	
+bin/zookeeper-server-start.sh config/zookeeper.properties
+#bin/kafka-server-stop.sh config/server.properties
+bin/kafka-server-start.sh config/server.properties
+bin/kafka-topics.sh --create --zookeeper 192.168.77.10:2181 --replication-factor 1 --partitions 1 --topic test
+#bin/kafka-topics.sh --delete --topic test --zookeeper 192.168.77.10:2181
+bin/kafka-topics.sh --list --zookeeper 192.168.77.10:2181
+bin/kafka-console-producer.sh --broker-list 192.168.77.10:9092 --topic test
+	This is a message
+	This is another message
+bin/kafka-console-consumer.sh --bootstrap-server 192.168.77.10:9092 --topic test --from-beginning
+
+** Now we will set up two node cluster (kfdmc1/kfdmc2)
+
+kfdmc2:
+cd /home/kafka
+tar -xvf /vagrant/kafka_2.11-0.11.0.0.tgz
+cd kafka_2.11-0.11.0.0
+
+vi config/server.properties
+	broker.id=1
+	zookeeper.connect=192.168.77.10:2181
+
+bin/kafka-server-start.sh config/server.properties
+bin/kafka-topics.sh --create --zookeeper 192.168.77.10:2181 --replication-factor 2 --partitions 1 --topic test2
+bin/kafka-topics.sh --list --zookeeper 192.168.77.10:2181
+
+10. Let's start producer on "kfdmc1" and validate it by starting a consumer on "kfdmc2"
+bin/kafka-console-producer.sh --broker-list 192.168.77.10:9092,192.168.77.11:9092 --topic test2
+bin/kafka-console-consumer.sh --zookeeper 192.168.77.10:2181 --topic test2 --from-beginning
+##bin/kafka-console-consumer.sh --bootstrap-server 192.168.77.10:9092,192.168.77.11:9092  --topic test2 --from-beginning
+## Needs all topics to be replicated fully
+
+** download and install scala and sbt 
+cd /home/kafka
+wget https://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz
+tar -xvf scala-2.11.8.tgz
+
+curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+sudo yum install sbt
+
+Ref: 
+	https://github.com/smallnest/kafka-example-in-scala
+	https://gist.github.com/fancellu/f78e11b1808db2727d76
+
+mkdir -p src/main/scal
+vi src/main/scala/ProducerExample.scala
+ **** Need the code *** 
+vi src/main/scala/ConsumerExample.scala
+ **** Need the code *** 
+vi build.sbt
+*** Need the sbt file ***
+	name := "Sample"
+	version := "1.0"
+	scalaVersion := "2.10.5"
+	libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.3"
+
+sbt package
+
+scp kafka@kfdmc6:/home/kafka/producer/target/scala-2.11/producer_sample_2.11-1.0.jar /home/kafka/.
+scp kafka@kfdmc6:/home/kafka/consumer/target/scala-2.11/consumer_sample_2.11-1.0.jar /home/kafka/.
+Start Producer
+java -cp "/home/kafka/kafka_2.11-0.11.0.0/libs/*":/home/kafka/producer_sample_2.11-1.0.jar ProducerExample
+java -cp "/home/kafka/kafka_2.11-0.11.0.0/libs/*":/home/kafka/consumer_sample_2.11-1.0.jar ConsumerExample	
+
+
+
+
+======================================================
+==> producer/src/main/scala/ProducerExample.scala <==
+object ProducerExample extends App {
+ import java.util.Properties
+ import org.apache.kafka.clients.producer._
+ val  props = new Properties()
+ props.put("bootstrap.servers", "192.168.77.10:9092,192.168.77.11:9092")
+ props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+ props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+ val producer = new KafkaProducer[String, String](props)
+ val TOPIC="test2"
+ for(i<- 1 to 50){
+  val record = new ProducerRecord(TOPIC, "key"+s"$i", s"hello $i")
+  Thread.sleep(1000)
+  producer.send(record)
+ }
+ val record = new ProducerRecord(TOPIC, "key", "the end "+new java.util.Date)
+ producer.send(record)
+ producer.close()
+}
+==> consumer/src/main/scala/ConsumerExample.scala <==
+import java.util
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import scala.collection.JavaConverters._
+object ConsumerExample extends App {
+  import java.util.Properties
+  val TOPIC="test2"
+  val  props = new Properties()
+  props.put("bootstrap.servers", "192.168.77.10:9092,192.168.77.11:9092")
+  props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  props.put("group.id", "something")
+  val consumer = new KafkaConsumer[String, String](props)
+  consumer.subscribe(util.Collections.singletonList(TOPIC))
+  while(true){
+    val records=consumer.poll(100)
+    for (record<-records.asScala){
+     println("Received message: (key=\"" + record.key() + "\", value=\"" + record.value() + "\") at offset =\"" + record.offset() +"\"")
+    }
+  }
+}
+
+==> consumer/build.sbt <==
+name := "consumer_sample"
+version := "1.0"
+scalaVersion := "2.11.0"
+libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.1.0"
+==> producer/build.sbt <==
+name := "producer_sample"
+version := "1.0"
+scalaVersion := "2.11.0"
+libraryDependencies += "org.apache.kafka" % "kafka_2.11" % "0.10.1.0"
+
+======================================================
+Vagrantfile
+======================================================
+Vagrant.configure("2") do |config|
+##  config.vm.box = "bento/centos-7.2"
+    config.vm.define "kfdmc1" do |kfdmc1| 
+        kfdmc1.vm.box = "bento/centos-7.2"
+        kfdmc1.vm.network "private_network", ip:"192.168.77.10"
+        kfdmc1.vm.hostname = "kfdmc1"
+        kfdmc1.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc1"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+ 
+    config.vm.define "kfdmc2" do |kfdmc2| 
+        kfdmc2.vm.box = "bento/centos-7.2"
+        kfdmc2.vm.network "private_network", ip:"192.168.77.11"
+        kfdmc2.vm.hostname = "kfdmc2"
+        kfdmc2.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc2"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+ 
+    config.vm.define "kfdmc3" do |kfdmc3| 
+        kfdmc3.vm.box = "bento/centos-7.2"
+        kfdmc3.vm.network "private_network", ip:"192.168.77.12"
+        kfdmc3.vm.hostname = "kfdmc3"
+        kfdmc3.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc3"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+    config.vm.define "kfdmc4" do |kfdmc4| 
+        kfdmc4.vm.box = "bento/centos-7.2"
+        kfdmc4.vm.network "private_network", ip:"192.168.77.13"
+        kfdmc4.vm.hostname = "kfdmc4"
+        kfdmc4.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc4"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+    config.vm.define "kfdmc5" do |kfdmc5| 
+        kfdmc5.vm.box = "bento/centos-7.2"
+        kfdmc5.vm.network "private_network", ip:"192.168.77.14"
+        kfdmc5.vm.hostname = "kfdmc5"
+        kfdmc5.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc5"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+    config.vm.define "kfdmc6" do |kfdmc6| 
+        kfdmc6.vm.box = "bento/centos-7.2"
+        kfdmc6.vm.network "private_network", ip:"192.168.77.15"
+        kfdmc6.vm.hostname = "kfdmc6"
+        kfdmc6.vm.provider :virtualbox do |vb|
+           vb.name = "kfdmc6"
+                                 vb.memory = 2048
+                                 vb.cpus = 1
+        end
+    end    
+end

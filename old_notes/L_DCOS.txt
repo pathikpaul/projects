@@ -1,0 +1,117 @@
+C:\Users\pathi\work\ldcos\dcos-vagrant
+
+https://github.com/dcos/dcos-vagrant
+	
+
+DCOS		http://m1.dcos/
+Marathon 	http://m1.dcos/marathon/ui/#/apps
+Mesos		http://m1.dcos/mesos/#/
+Learn More 	https://dcos.io/
+Find the Docs	https://dcos.io/docs/
+Machines
+	m1.dcos
+	a1.dcos
+	p1.dcos
+	boot.dcos
+
+192.168.65.90   m1.dcos
+192.168.65.111  a1.dcos
+192.168.65.60   p1.dcos
+192.168.65.60   spring.acme.org oinker.acme.org
+192.168.65.50   boot.dcos
+
+master - Master node that runs the DC/OS core components (e.g. m1)
+agent-private - Agent node that runs the Mesos agent with the * role (e.g. a1)
+agent-public - Agent node that runs the Mesos agent with the slave_public role (e.g. p1)
+boot - Bootstrap node that runs the installer (e.g. boot)
+
+
+dcos on a1
+Notes:
+	http://m1.dcos/login?redirect_uri=urn:ietf:wg:oauth:2.0:oob
+
+https://dcos.io/get-started/
+https://dcos.io/docs/1.8/usage/tutorials/dcos-101/
+
+** Package
+dcos package search redis
+dcos package install redis
+dcos task
+dcos marathon app list
+dcos task log redis
+dcos node ssh --master-proxy --mesos-id=$(dcos task redis --json | jq -r '.[] | .slave_id')
+sudo docker ps
+sudo docker exec -i -t CONTAINER_ID /bin/bash
+	reis-cli
+	set mykey key1
+	get mykey
+
+** APP
+https://raw.githubusercontent.com/joerg84/dcos-101/master/app1/app1.py
+	print("Running on node '"+  os.getenv("HOST") + "' and port '" + os.getenv("PORT0"))
+	if r.ping():	print("Redis Connected. Total number of keys:", len(r.keys()))
+	else:	       	print("Could not connect to redis")
+	time.sleep(5)
+
+https://github.com/joerg84/dcos-101/blob/master/app1/DOCKERFILE
+	FROM python
+	RUN apt-get update && apt-get -y install python-pip && pip install redis
+	ENTRYPOINT ["/usr/bin/redis-server"]
+https://raw.githubusercontent.com/joerg84/dcos-101/master/app1/app1.json
+
+dcos marathon app add https://raw.githubusercontent.com/joerg84/dcos-101/master/app1/app1.json
+	  "id": 	"/dcos-101/app1",
+	  "cmd": 	"while true; do python $MESOS_SANDBOX/app1.py; done",
+	  "uri": 	"https://raw.githubusercontent.com/joerg84/dcos-101/master/app1/app1.py"
+	  "container":"docker":"image": "mesosphere/dcos-101",
+
+......................................................................................................
+......................................................................................................
+DCOS installation in GIELAB
+......................................................................................................
+** set up on Lab
+16Gb / 4CPU / RHEL 7.3 - 
+1 Boot Strap
+1 Master
+3 Agents
+
+Disk ( 10Gb on /var/logs should be sufficient to begin with)
+systemctl stop firewalld
+systemctl disable firewalld
+
+Exhibitor http://xxx:8181/exhibitor/v1/ui/index.html
+journalctl -flu <ServiceName>
+
+https://raw.githubusercontent.com/dcos/dcos/1.9.1/cloud_images/centos7/install_prereqs.sh
+On all nodes
+    export http_proxy=
+    export https_proxy=
+    rpm -ivh http:// ... libtool-ltdl-2.4.2-22.el7_3.x86_64.rpm
+    rpm  --import "https://pgp.mit.edu/pks/lookup?op=get&search=0xee6 .... " Key block 
+    yum install -y yum-utils
+    yum-config-manager --add-repo https://packages.docker.com/1.11/yum/repo/main/centos/7
+    yum -y install docker-engine
+echo ">>> Customizing Docker storage driver to use Overlay"
+echo '{"storage-driver":"overlay"}' > "/etc/docker/daemon.json"
+
+enable NTP
+
+echo ">>> Disabling SELinux"
+sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+sudo groupadd nogroup &&
+sudo groupadd docker &&
+sudo reboot
+
+
+echo ">>> Installing DC/OS dependencies and essential packages"
+yum -y --tolerant install perl tar xz unzip curl bind-utils net-tools ipset libtool-ltdl rsync nfs-utils
+
+Main Install 
+Bootstrap:
+sudo docker pull nginx
+    
+https://docs.mesosphere.com/1.9/installing/custom/advanced/
+    
+
+......................................................................................................
+......................................................................................................

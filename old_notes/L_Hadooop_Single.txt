@@ -1,0 +1,252 @@
+Java
+    jdk-8u131-linux-x64.tar.gz
+Hadoop
+    hadoop-2.8.0.tar.gz 
+
+------------------------------------------------------------------------------------------------------------
+3 Node Hadoop Cluster
+------------------------------------------------------------------------------------------------------------
+
+sudo groupadd hadoop
+sudo useradd hadoop -g hadoop
+sudo  passwd hadoop
+
+
+https://github.com/mesos/hadoop
+https://strat0sphere.wordpress.com/2014/10/30/hadoop-on-mesos-installation-guide/
+
+wget http://archive.cloudera.com/cdh5/cdh/5/hadoop-2.5.0-cdh5.2.0.tar.gz
+tar -xvf /vagrant/hadoop-2.5.0-cdh5.2.0.tar.gz
+#tar -xvf soft/jdk-8u131-linux-x64.tar.gz
+#ln -s jdk1.8.0_131 JDK
+#ln -s hadoop-2.5.0-cdh5.2.0 hadoop
+#HADOOP_HOME=/home/hadoop/hadoop
+#export JAVA_HOME=/home/hadoop/JDK
+#export PATH=$PATH:$HOME/bin:${HADOOP_HOME}:${HADOOP_HOME}/bin:${JAVA_HOME}:${JAVA_HOME}bin:
+
+cd /home/hadoop/hadoop-2.5.0-cdh5.2.0
+mv bin bin-mapreduce2
+mv examples examples-mapreduce2 
+ln -s bin-mapreduce1 bin
+ln -s examples-mapreduce1 examples
+pushd etc
+	mv hadoop hadoop-mapreduce2
+	ln -s hadoop-mapreduce1 hadoop
+popd
+pushd share/hadoop
+	rm mapreduce
+	ln -s mapreduce1 mapreduce
+popd
+
+Oracle Java:
+............
+sudo rpm -ivh /vagrant/jdk-8u131-linux-x64.rpm
+
+Maven:
+......
+	https://tecadmin.net/install-apache-maven-on-centos/#
+	cd /opt
+	sudo wget http://www-eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+	sudo tar xzf apache-maven-3.3.9-bin.tar.gz
+	sudo ln -s apache-maven-3.3.9 maven
+	sudo vi /etc/profile.d/maven.sh
+		export M2_HOME=/opt/maven
+		export PATH=${M2_HOME}/bin:${PATH}
+	mvn -version 
+hadoop-mesos-0.1.0.jar
+......................
+	cd /home/hadoop/soft/mesos
+	git clone https://github.com/mesos/hadoop.git hadoopOnMesos
+	cd hadoopOnMesos/
+	mvn package
+	target/hadoop-mesos-0.1.0.jar
+	cp /vagrant/hadoop-mesos-0.1.0.jar /home/hadoop/hadoop-2.5.0-cdh5.2.0/share/hadoop/common/lib/.
+vi /home/hadoop/hadoop/etc/hadoop/hadoop-env.sh
+	export JAVA_HOME=/home/hadoop/JDK
+		/usr/java/latest
+vi /home/hadoop/hadoop/etc/hadoop/core-site.xml
+	<property>
+	<name>fs.default.name</name>
+	<value>hdfs://192.168.77.12:9000</value>
+	</property>
+	<property>
+	<name>hadoop.tmp.dir</name>
+	<value>/home/hadoop/data2/tmp</value>
+	</property>
+vi /home/hadoop/hadoop/etc/hadoop/hdfs-site.xml
+	<property>
+	<name>dfs.replication</name>
+	<value>1</value>
+	</property>
+	<property>
+	<name>dfs.name.dir</name>
+	<value>/home/hadoop/data2/name_node</value>
+	</property>
+	<property>
+	<name>dfs.data.dir</name>
+	<value>/home/hadoop/data2/data_node</value>
+	</property>
+	<property>
+	<name>fs.checkpoint.dir</name>
+	<value>/home/hadoop/data2/sec_name_name</value>
+	</property>
+vi /home/hadoop/hadoop/etc/hadoop/mapred-site.xml	
+	<property>
+	<name>mapred.job.tracker</name>
+	<value>192.168.77.12:9001</value>
+	</property>
+
+#hadoop jar /home/hadoop/hadoop/share/hadoop/mapreduce1/hadoop-examples-2.5.0-mr1-cdh5.2.0.jar wordcount ~/input ~/output2
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop namenode -format
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh start namenode
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh srart secondarynamenode
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh start datanode
+#/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh start jobtracker
+#/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh start tasktracker
+
+
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop dfs -mkdir /input
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop dfs -ls -R /
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop dfs -put /etc/passwd /input/.
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop jar /home/hadoop/hadoop-2.5.0-cdh5.2.0/share/hadoop/mapreduce1/hadoop-examples-2.5.0-mr1-cdh5.2.0.jar wordcount /input /output
+
+Name Node       http://192.168.77.10:50070/
+Job Tracker     http://192.168.77.10:50030/
+Data Node 	http://192.168.77.10:50075/blockScannerReport
+Data Node 	http://192.168.77.11:50075/blockScannerReport
+Data Node 	http://192.168.77.12:50075/blockScannerReport
+
+
+------------------------------------------------------------------------------------------------------------
+$ cat /etc/profile.d/hadoop.sh
+export HADOOP_MAPRED_HOME=/home/hadoop/hadoop-2.5.0-cdh5.2.0
+export MESOS_NATIVE_JAVA_LIBRARY=/usr/local/lib/libmesos.so
+$
+
+vi /home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop-daemon.sh
+	export MESOS_NATIVE_LIBRARY=/usr/local/lib/libmesos.so
+	
+cd /home/hadoop/
+tar cfz hadoop-2.5.0-cdh5.2.0.tar.gz hadoop-2.5.0-cdh5.2.0
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop dfs -put hadoop-2.5.0-cdh5.2.0.tar.gz /hadoop-2.5.0-cdh5.2.0.tar.gz
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop dfs -ls hdfs://192.168.77.10:9000/hadoop-2.5.0-cdh5.2.0.tar.gz
+
+vi /home/hadoop/hadoop-2.5.0-cdh5.2.0/etc/hadoop/mapred-site.xml
+<configuration>
+    <property>
+        <name>mapred.job.tracker</name>
+        <value>192.168.77.10:9001</value>
+    </property>
+<property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.MesosScheduler</value>
+</property>
+<property>
+  <name>mapred.mesos.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.JobQueueTaskScheduler</value>
+</property>
+<property>
+  <name>mapred.mesos.master</name>
+  <value>192.168.77.10:5050</value>
+</property>
+<property>
+  <name>mapred.mesos.executor.uri</name>
+  <value>hdfs://192.168.77.10:9000/hadoop-2.5.0-cdh5.2.0.tar.gz</value>
+</property>
+
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop job -list
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop job -kill job_201704262143_0002
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop  dfs -rm -R /output
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop jar /home/hadoop/hadoop-2.5.0-cdh5.2.0/share/hadoop/mapreduce1/hadoop-examples-2.5.0-mr1-cdh5.2.0.jar wordcount -Dmapreduce.map.memory.mb=215 -Dmapreduce.reduce.memory.mb=215 -Dmapred.map.tasks=1 -Dmapred.reduce.tasks=1 /input /output
+
+/home/hadoop/hadoop-2.5.0-cdh5.2.0/bin/hadoop jar /home/hadoop/hadoop-2.5.0-cdh5.2.0/share/hadoop/mapreduce1/hadoop-examples-2.5.0-mr1-cdh5.2.0.jar wordcount -Dmapreduce.map.memory.mb=32 -Dmapreduce.reduce.memory.mb=32 -Dmapred.map.tasks=1 -Dmapred.reduce.tasks=1 /input /output
+17/04/27 14:11:04 INFO mapred.JobClient:     Physical memory (bytes) snapshot=437485568
+17/04/27 14:11:04 INFO mapred.JobClient:     Virtual memory (bytes) snapshot=3984896000 [[ 4 Gb ]]
+17/04/27 14:11:04 INFO mapred.JobClient:     Total committed heap usage (bytes)=305135616
+
+
+
+------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------
+
+** Stop all
+stop-dfs.sh
+stop-yarn.sh
+mr-jobhistory-daemon.sh stop historyserver
+--
+start-dfs.sh
+stop-yarn.sh
+mr-jobhistory-daemon.sh stop historyserver
+
+hadoop jar /home/hadoop/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.8.0.jar wordcount /input /output
+
+/home/hadoop/hadoop/etc/hadoop/core-site.xml
+<property>
+  <name>hadoop.security.authentication</name>
+  <value>kerberos</value> <!-- A value of "simple" would disable security. -->
+</property>
+<property>
+  <name>hadoop.security.authorization</name>
+  <value>true</value>
+</property>
+
+[hadoop@base ~]$ ktutil
+ktutil:  addent -password -p user1@EXAMPLE.COM -k 1 -e rc4-hmac
+Password for user1@EXAMPLE.COM:
+ktutil:  addent -password -p user1@EXAMPLE.COM -k 1 -e aes256-cts
+Password for user1@EXAMPLE.COM:
+ktutil:  wkt user1.keytab
+ktutil:  quit
+[hadoop@base ~]$
+
+kinit user1@EXAMPLE.com -k -t user1.keytab
+
+============================================================================================
+============================================================================================
+Kerberos
+============================================================================================
+192.168.1.19
+192.168.1.20
+
+https://gist.github.com/ashrithr/4767927948eca70845db
+
+yum install krb5-server krb5-libs krb5-auth-dialog krb5-workstation
+##yum install pam_krb5
+
+
+[root@kdc krb5kdc]# kdb5_util create -r EXAMPLE.COM -s
+Loading random data
+Initializing database '/var/kerberos/krb5kdc/principal' for realm 'EXAMPLE.COM',
+master key name 'K/M@EXAMPLE.COM'
+Enter KDC database master key:
+Re-enter KDC database master key to verify:[root@kdc krb5kdc]#
+
+
+[root@kdc krb5kdc]# kadmin.local
+Authenticating as principal root/admin@EXAMPLE.COM with password.
+kadmin.local:  addprinc root/admin
+kadmin.local:  addprinc user1
+kadmin.local:  ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/admin
+kadmin.local:  ktadd -k /var/kerberos/krb5kdc/kadm5.keytab kadmin/changepw
+kadmin.local:  exit
+#
+
+[root@kdc krb5kdc]# kadmin.local
+Authenticating as principal root/admin@EXAMPLE.COM with password.
+kadmin.local:  addprinc -randkey host/kdc.example.com
+WARNING: no policy specified for host/kdc.example.com@EXAMPLE.COM; defaulting to no policy
+Principal "host/kdc.example.com@EXAMPLE.COM" created.
+kadmin.local:  ktadd host/kdc.example.com
+kadmin.local:  [root@kdc krb5kdc]#
+
+
+# kadmin -p root/admin
+listprincs
+
+** client **
+yum -y install krb5-workstation
+kadmin -p root/admin
+ kadmin:  addpinc --randkey host/client.example.com
+ kadmin:  ktadd host/kdc.example.com

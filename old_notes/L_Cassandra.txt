@@ -1,0 +1,120 @@
+Req
+	http://docs.datastax.com/en/dse/5.1/dse-admin/datastax_enterprise/install/installTARdse.html
+	https://www.datastax.com/2012/01/how-to-set-up-and-monitor-a-multi-node-cassandra-cluster-on-linux
+
+Java
+sudo yum install -y java-1.8.0-openjdk-devel
+
+ID=hadoop
+su - root
+groupadd hadoop
+useradd hadoop -g hadoop
+passwd hadoop 
+
+sudo vi /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.77.10 cassdmc1
+192.168.77.11 cassdmc2
+192.168.77.12 cassdmc3
+
+
+cd /vagrant
+curl --user email:password -L https://downloads.datastax.com/enterprise/dse.tar.gz > dse.tar
+cd /home/hadoop
+tar -xvf /vagrant/dse.tar
+
+
+#LogFiles
+export USER=hadoop
+export GROUP=hadoop
+ sudo mkdir -p /var/lib/cassandra; sudo chown -R  $USER:$GROUP /var/lib/cassandra
+ sudo mkdir -p /var/log/cassandra; sudo chown -R  $USER:$GROUP /var/log/cassandra
+ sudo mkdir -p /var/lib/dsefs; sudo chown -R  $USER:$GROUP /var/lib/dsefs
+ sudo mkdir -p /var/lib/spark; sudo chown -R  $USER:$GROUP /var/lib/spark
+ sudo mkdir -p /var/log/spark; sudo chown -R  $USER:$GROUP /var/log/spark	
+
+ ls -ld /var/lib/cassandra /var/log/cassandra /var/lib/dsefs /var/lib/spark /var/log/spark
+ 
+Single-node cluster installations only:
+Start DataStax Enterprise from the installation directory:
+$ cd /home/hadoop/dse-5.1.2
+$ bin/dse cassandra
+
+Verify that DataStax Enterprise is running from the installation directory:
+$ cd /home/hadoop/dse-5.1.2
+$ bin/nodetool status
+
+listen_address:192.168.77.10
+listen_address:192.168.77.11
+listen_address:192.168.77.12
+listen_address: localhost  <<<<<<***********  Comment it out ***
+
+ (use ip address of the current machine  and remmember to comment out the line with localhost)
+          - seeds: "192.168.77.10,192.168.77.11,192.168.77.12"
+		  
+
+hadoop@cassdmc1 dse-5.1.2]$  diff /home/hadoop/dse-5.1.2/resources/cassandra/conf/cassandra.yaml /home/hadoop/dse-5.1.2/resources/cassandra/conf/cassandra.yaml_save
+<           - seeds: "192.168.77.10,192.168.77.11,192.168.77.12"
+>           - seeds: "127.0.0.1"
+< #listen_address: localhost
+< listen_address: 192.168.77.10
+> listen_address: localhost
+[hadoop@cassdmc1 dse-5.1.2]$
+		  
+		  
+		  
+Diable firewalls
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+
+
+-------------------
+cd /home/hadoop/dse-5.1.2
+bin/dse cassandra
+
+cd /home/hadoop/dse-5.1.2
+bin/nodetool status
+
+[hadoop@cassdmc1 dse-5.1.2]$ bin/nodetool status
+Datacenter: Cassandra
+=====================
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address        Load       Tokens       Owns    Host ID                               Rack
+UN  192.168.77.10  170.96 KiB  1            ?       fde40ade-7f7c-4243-9a2d-474f2b748f3d  rack1
+UN  192.168.77.11  99.55 KiB  1            ?       151f1fef-58f3-4189-beb0-d284a63f1698  rack1
+UN  192.168.77.12  109.49 KiB  1            ?       5631cf25-8360-47b4-a00b-f501758b01c9  rack1
+[hadoop@cassdmc1 dse-5.1.2]$
+
+
+
+Verify
+ bin/cqlsh
+
+
+http://docs.datastax.com/en/cql/3.1/cql/cql_using/example_creating_ks_t.html
+
+[hadoop@cassdmc1 dse-5.1.2]$ bin/cqlsh
+cqlsh> CREATE KEYSPACE demodb1 WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'Cassandra' : 3 };
+cqlsh> use demodb1;
+cqlsh:demodb1> CREATE TABLE emp (
+  empID int,
+  deptID int,
+  first_name varchar,
+  last_name varchar,
+  PRIMARY KEY (empID, deptID));
+cqlsh:demodb1> INSERT INTO emp (empID, deptID, first_name, last_name)  VALUES (104, 15, 'jane', 'smith');
+
+*** On Another Node ***  
+
+[hadoop@cassdmc2 dse-5.1.2]$ bin/cqlsh
+cqlsh> use demodb1;
+cqlsh:demodb1> select * from emp;
+
+ empid | deptid | first_name | last_name
+-------+--------+------------+-----------
+   104 |     15 |       jane |     smith
+
+(1 rows)
+cqlsh:demodb1>

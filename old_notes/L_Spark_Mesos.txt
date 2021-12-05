@@ -1,0 +1,126 @@
+Download 
+	Spark 1.6.3
+	Hadoop 2.6
+	http://spark.apache.org/downloads.html
+	spark-1.6.3-bin-hadoop2.6.tgz
+Pre Req
+	java -version  = openjdk version "1.8.0_131"
+
+tar -xvf /vagrant/spark-1.6.3-bin-hadoop2.6.tgz
+cd spark-1.6.3-bin-hadoop2.6
+
+spark-shell
+
+val counts = sc.textFile("/etc/passwd").flatMap(l=>l.split(" ")).map(l=> (l,1)).reduceByKey(_+_)
+counts.saveAsTextFile("/home/hadoop/sparkout")
+rm -rf /home/hadoop/sparkout
+
+
+===
+The next step is to tell Spark where Mesos and the tgz on http live. 
+cd /home/hadoop/spark-1.6.3-bin-hadoop2.6/conf
+	cp spark-env.sh.template spark-env.sh 
+	vi spark-env.sh
+	export MESOS_NATIVE_JAVA_LIBRARY=/usr/local/lib/libmesos.so
+	export SPARK_EXECUTOR_URI=http://192.168.77.10:9914/spark-1.6.3-bin-hadoop2.6.tgz
+
+-- Webserver: 
+cd /home/hadoop
+tar -czvf spark-1.6.3-bin-hadoop2.6.tgz spark-1.6.3-bin-hadoop2.6
+python -m SimpleHTTPServer 9914
+
+---
+bin/spark-shell --master mesos://192.168.77.10:5050
+bin/spark-submit --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar
+bin/spark-submit --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar 1000
+bin/spark-submit --num-executors 5 --driver-memory 1g --executor-memory 1g  --class  org.apache.spark.examples.SparkPi --master mesos://192.168.77.10:5050 /home/hadoop/spark-1.6.3-bin-hadoop2.6/lib/spark-examples-1.6.3-hadoop2.6.0.jar 
+
+-------------------
+import java.io._
+
+def getListOfSubDirectories(directoryName: String): Array[String] = {
+    (new File(directoryName))
+        .listFiles
+        .filter(_.isDirectory)
+        .map(_.getName)
+}
+
+sc.parallelize(getListOfSubDirectories("/")).saveAsTextFile("/home/hadoop/sparkout")
+sc.parallelize(getListOfSubDirectories("/")).foreach(println(_))
+println("====================================================")
+
+
+http://www.infoobjects.com/spark-submit-with-sbt/
+
+SBT
+http://www.scala-sbt.org/release/docs/Installing-sbt-on-Linux.html
+
+curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+sudo yum install sbt
+
+$ cat ./src/main/scala/Person.scala
+import org.apache.spark._
+import java.io._
+object Person extends App {
+def getListOfSubDirectories(directoryName: String): Array[String] = { (new File(directoryName)).listFiles.filter(_.isDirectory).map(_.getName) }
+ val sc = new SparkContext
+ sc.parallelize(getListOfSubDirectories("/")).foreach(println(_))
+ sc.parallelize(getListOfSubDirectories("/")).saveAsTextFile("/tmp/sparkout")
+}
+
+
+$ cat build.sbt
+name := "Sample"
+version := "1.0"
+scalaVersion := "2.10.5"
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.3"
+$
+
+
+bin/spark-submit --class Person --master local /home/hadoop/people/target/scala-2.10/sample_2.10-1.0.jar
+
+** compile with maven
+http://mirror.jax.hugeserver.com/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+/home/hadoop/apache-maven-3.5.0/bin/mvn package
+/home/hadoop/people/target/my-app-1.0.jar
+
+/home/hadoop/spark-1.6.3-bin-hadoop2.6/bin/spark-submit --class Person --master local /home/hadoop/people/target/my-app-1.0.jar
+
+http://stackoverflow.com/questions/19687821/maven-compile-replies-no-sources-to-compile-for-scala-project
+
+$ cat pom.xml
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mycompany.app</groupId>
+    <artifactId>my-app</artifactId>
+    <version>1.0</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
+    </dependencies>
+
+
+<build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+        <plugin>
+            <groupId>org.scala-tools</groupId>
+            <artifactId>maven-scala-plugin</artifactId>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+
+</project>

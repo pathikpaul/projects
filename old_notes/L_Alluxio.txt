@@ -1,0 +1,4 @@
+http://www.alluxio.org/docs/1.0/en/Running-Alluxio-Locally.html
+	Local 
+http://www.alluxio.org/docs/master/en/Getting-Started.html
+	List / Start / Stop / Cache

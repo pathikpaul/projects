@@ -1,0 +1,81 @@
+http://david.pilato.fr/blog/2015/06/01/indexing-twitter-with-logstash-and-elasticsearch/
+
+
+https://www.elastic.co/guide/en/logstash/current/config-examples.html
+https://www.youtube.com/watch?v=6bXSfjwQVIc
+	ELK using docker
+
+Logstash
+	docker run -d 
+	https://www.elastic.co/guide/en/logstash/current/config-examples.html
+input{
+stdin{}
+}
+
+output{
+ elasticsearch { hosts => ["elasticsearch:9200"] }	
+}
+
+sudo docker run -h logstash --name logstash --link elasticsearch:elasticsearch -it --rm -v "$PWD":/config-dir logstash -f /config-dir/logstash.conf
+
+* kibana does not need to know about logstash 
+
+2nd Example
+input{
+tcp {
+   port=>9500
+   }
+}
+output{
+ elasticsearch { hosts => ["elasticsearch:9200"] }	
+}
+
+sudo docker run -h logstash --name logstash --link elasticsearch:elasticsearch -it --rm -v "$PWD":/config-dir logstash -f /config-dir/logstash2.conf
+send messages using 
+telnet localhost:9500
+
+----------------------------------------------------------------------------------------
+Initial Setup
+----------------------------------------------------------------------------------------
+groupadd hadoop
+useradd hadoop -g hadoop
+passwd hadoop 
+visudo
+	hadoop  ALL=(ALL)       ALL
+
+vi /etc/hosts
+
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
+
+    sudo yum install -y docker
+    sudo service docker start
+
+    sudo yum install -y telnet
+
+sudo    docker run hello-world
+sudo    docker run ubuntu /bin/echo a
+sudo    docker run -t -i ubuntu /bin/bash
+
+----------------------------------------------------------------------------------------
+Elastic
+	sudo docker run -d -p 9200:9200 -p 9300:9300 -it  -h elasticsearch --name elasticsearch elasticsearch
+	curl http://localhost:9200
+	or 
+	http://192.168.77.10:9200/
+Kibana
+	sudo docker run -d -p 5601:5601 -h kibana --name kibana --link elasticsearch:elasticsearch kibana
+	loclahost:5601
+	or	
+	http://192.168.77.10:5601/
+Logstash
+	cd /home/hadoop/config-dir
+	** Check that the needed files are in PWD
+	sudo docker run -h logstash --name logstash --link elasticsearch:elasticsearch -it --rm -v "$PWD":/config-dir logstash -f /config-dir/logstash.conf
+	** Now for using the port
+	sudo docker run -p 9500:9500 -h logstash --name logstash --link elasticsearch:elasticsearch -it --rm -v "$PWD":/config-dir logstash -f /config-dir/logstash2.conf
+	telnet 192.168.77.10 9500
+		** Provide Input 
+		** see o/P in Kibana
+
+

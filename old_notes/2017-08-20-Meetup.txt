@@ -1,0 +1,132 @@
+To Do
+	https://pythonprogramming.net/tensorflow-deep-neural-network-machine-learning-tutorial/
+	https://pythonprogramming.net/tensorflow-introduction-machine-learning-tutorial/
+	https://pythonprogramming.net/neural-networks-machine-learning-tutorial/
+	https://pythonprogramming.net/machine-learning-tutorial-python-introduction/
+	* https://pythonprogramming.net/introduction-to-python-programming/
+
+
+Prachiti
+
+shared google drive
+
+
+Aug 8th
+
+Fast . AI ---- Not Coursera - Jeremy Howard
+
+- anyone can do machine learning 
+- Not using tenserflow 
+- it is amazon
+
+	Top Down 
+	First teaches programming
+	Then the theory
+
+Udacity - deep learing course
+	- they don't teach you a lot
+	- they expect a lot from your 
+	- lots of pre requisites
+	- 5 Projects
+	- jupyter notebook
+	- Is it free ???
+
+
+courera - deep learning 
+	- updated
+	- uses all the latest technologies
+	- python / numpy
+	- tenserflow
+
+coursera - mcahine learning
+	- do the course in python nympy instead
+	- types of problems
+		- variance
+		- classification
+
+
+Rajesh
+Daemon
+Bailey
+Bob K
+Mohit
+Michael
+
+---------------------------------------------
+
+
+- RNN/CNN
+---------------------------------------------
+
+Natural Language Processing
+word to vector
+skip grams
+cbow
+
+google: Tensorflow word to vec 
+
+ziffian distribution
+
+tenserflow is a framework
+
+LSTM for NLP
+---------------------------------------------
+---------------------------------------------
+Titanic 
+Datacamp Kaggle competions
+	- 
+
+================================================================================
+https://www.coursera.org/learn/machine-learning
+http://cs229.stanford.edu/materials.html
+https://www.coursera.org/learn/machine-learning/discussions
+https://www.coursera.org/learn/machine-learning/discussions/all/threads/v2YppY8FEeWIeBJxvl1elQ
+Taught by:  Andrew Ng
+
+11 Weeks
+Week 1
+	*Introduction
+	*Linear Regression with One Variable
+	Linear Algebra Review
+Week 2
+	Linear Regression with Multiple Variables
+	Octave/Matlab Tutorial
+	
+Examples 
+	Photo tagging
+	Click Stream
+	NLP
+	Recommendation Engine
+
+What is machine learning  (Supervised / UnSupervised)
+	Arthur Samuel
+	Tom Mitchell
+		E = the experience of playing many games of checkers
+		T = the task of playing checkers.
+		P = the probability that the program will win the next game.
+
+Learning Algorithms
+Introduction Supervised Learning
+	Supervised Learning => Give it dataset with expected results
+		Regression Problem (numeric o/P .. continuous)
+		Classification Problem ( two or more possible outputs)
+			Inputs = Features (infinite number of features)
+			Outputs = Labels
+		
+Introduction UnSupervised Learning
+	Input = dataset .. but no results provided
+	Clustering 
+		news.google.com grouping news articles
+		grouping people based on the genetic code
+		social network analysis
+		market segmentation
+	Octave is free version of matlab	
+
+Model and Cost Function
+	h = hypothesis = Model
+		univariate linear regression (one I/P one O/P)
+		y = c + mx
+	Cost function = squared error function
+Parameter Learning : Gradient Descent
+	
+	

@@ -1,0 +1,21 @@
+
+
+=============================================================================
+
+Needs "SyntaxHighlighter Evolved"
+
+How to display code in wordpress
+http://segintechnologies.com/kafka-w-twitter/
+
+[code language="java" collapse="true"]
+   *****code goes here***
+ [/code]
+
+[code language="php" collapse="true"]
+   *****code goes here***
+[/code]
+=============================================================================
+https://www.stockfreeimages.com/2610697/Computer-Circuit-Board.html#
+    pathikpaul
+    chilly
+    pathikpaul@hotmail.com
